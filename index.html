@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Captura de Marcas — Compras Ganadera Bahía Rica</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#12344f">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+:root{
+  --brand:#1F4E78; --brand-deep:#12344f; --brand-wash:#eaf0f6;
+  --brass:#8a6a12; --brass-wash:#f6edd2; --brass-line:#e3d2a0;
+  --ink:#0f1f2c; --ink-soft:#43586a; --muted:#7d8f9e;
+  --ground:#e6ebf0; --plate:#fff; --rule:#c9d5de; --rule-soft:#e2e9ef;
+  --danger:#9a2b1e; --danger-wash:#fbe9e7; --ok:#1d6b45; --ok-wash:#e6f2ec;
+  --display:"Arial Narrow","Helvetica Neue Condensed","Liberation Sans Narrow",Arial,sans-serif;
+  --sans:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;
+  --mono:Consolas,"SF Mono","Liberation Mono",Menlo,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+  height:100%;overscroll-behavior:none}
+body{display:flex;flex-direction:column}
+button,input,select{font-family:inherit}
+
+/* ---------- Encabezado: siempre visible, muestra la compra en curso ---------- */
+.masthead{background:var(--brand-deep);color:#fff;padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+  border-bottom:3px solid var(--brass);position:sticky;top:0;z-index:20}
+.masthead-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.masthead-top h1{margin:0;font-family:var(--display);text-transform:uppercase;letter-spacing:.08em;
+  font-size:15px;font-weight:700}
+.pasos{display:flex;gap:5px}
+.paso-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25)}
+.paso-dot.activo{background:#fff}
+.paso-dot.hecho{background:var(--brass)}
+.compra-actual{margin:7px 0 0;font-size:12px;color:#a8c6de;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;display:flex;align-items:center;gap:6px}
+.compra-actual b{color:#fff;font-weight:600}
+.lote-chip{margin-left:auto;flex:0 0 auto;font-family:var(--mono);font-size:11px;background:rgba(255,255,255,.12);
+  padding:3px 9px;border-radius:10px;color:#cfe0ee}
+
+/* ---------- Cuerpo ---------- */
+.main{flex:1;overflow-y:auto;padding:14px 14px calc(24px + env(safe-area-inset-bottom))}
+.paso{display:none}
+.paso.activo{display:block;animation:entra .18s ease-out}
+@keyframes entra{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.tarjeta{background:var(--plate);border-radius:14px;padding:16px;box-shadow:0 2px 10px rgba(15,31,44,.06);
+  margin-bottom:14px;border:1px solid var(--rule-soft)}
+.tarjeta h2{margin:0 0 4px;font-family:var(--display);text-transform:uppercase;letter-spacing:.07em;
+  font-size:14px;font-weight:700;color:var(--brand-deep)}
+.tarjeta .sub{margin:0 0 14px;font-size:12px;color:var(--muted)}
+
+/* ---------- Controles del lienzo ---------- */
+.canvas-header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;
+  background:#f6f8fa;border:1px solid var(--rule-soft);border-radius:10px;padding:8px 10px;margin-bottom:10px}
+.grosor{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink-soft)}
+.grosor select{padding:5px 7px;border-radius:6px;border:1px solid var(--rule);background:#fff;font-size:13px}
+.chk{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+.chk.spen{color:var(--danger);background:var(--danger-wash);padding:5px 9px;border-radius:8px}
+.chk.guia{color:var(--brand);background:var(--brand-wash);padding:5px 9px;border-radius:8px}
+.chk input{width:16px;height:16px;accent-color:currentColor}
+
+.lienzo-wrap{position:relative;display:flex;justify-content:center;margin-bottom:10px}
+.lienzo-caja{position:relative;width:min(78vw,320px);aspect-ratio:1;border:2px solid var(--brand-deep);
+  border-radius:10px;overflow:hidden;background:#fafbfb;box-shadow:inset 0 0 12px rgba(15,31,44,.05)}
+.lienzo-caja canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+#capaGuia{z-index:1}
+#capaDibujo{z-index:2}
+
+.herramientas{display:flex;gap:8px;margin-bottom:4px}
+.htool{flex:1;padding:11px 6px;border-radius:9px;border:1px solid var(--rule);background:#fff;
+  color:var(--ink-soft);font-size:12px;font-weight:700;display:flex;flex-direction:column;
+  align-items:center;gap:3px;cursor:pointer}
+.htool:active{background:#f1f5f8}
+.htool.deshabilitado{opacity:.4}
+.htool.borrar{color:var(--danger);border-color:#f0cfc9}
+.htool svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
+
+/* ---------- Modo pantalla completa ---------- */
+.pantalla-completa{position:fixed;inset:0;z-index:100;background:var(--ground);display:none;
+  flex-direction:column;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.pantalla-completa.on{display:flex}
+.pc-barra{display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
+.pc-barra .cerrar{background:var(--brand-deep);color:#fff;border:0;border-radius:8px;padding:9px 16px;
+  font-size:13px;font-weight:700}
+.pc-lienzo{flex:1;display:flex;align-items:center;justify-content:center;padding:10px}
+.pc-lienzo .lienzo-caja{width:min(88vw,88vh);}
+.pc-herramientas{padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
+
+/* ---------- Campos ---------- */
+.campo{margin-bottom:12px}
+.campo label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.06em;margin-bottom:4px}
+.campo input{width:100%;padding:12px;border:1px solid var(--rule);border-radius:9px;font-size:15px;color:var(--ink)}
+.campo input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(31,78,120,.12)}
+.fila-dos{display:flex;gap:10px}
+.fila-dos .campo{flex:1}
+
+.aviso-obligatorio{font-size:11px;color:var(--muted);margin:-6px 0 12px}
+
+/* ---------- Botonera ---------- */
+.acciones{display:flex;gap:10px;margin-top:4px}
+.btn{flex:1;padding:14px;border-radius:10px;border:0;font-size:14px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.03em;cursor:pointer}
+.btn-primario{background:var(--brand);color:#fff}
+.btn-primario:active{background:var(--brand-deep)}
+.btn-secundario{background:#fff;color:var(--brand);border:1px solid var(--brand)}
+.btn-exito{background:#27ae60;color:#fff}
+.btn-exito:active{background:#219150}
+.btn.deshabilitado{opacity:.45;pointer-events:none}
+
+/* ---------- Galería de complementarias ---------- */
+.galeria-cabecera{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.galeria-cabecera .cnt{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.galeria{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.gcel{position:relative;aspect-ratio:1;border-radius:9px;border:1px solid var(--rule);background:#fff;
+  overflow:hidden;cursor:pointer}
+.gcel img{width:100%;height:100%;object-fit:contain;padding:4px}
+.gcel .num{position:absolute;top:3px;left:4px;font-family:var(--mono);font-size:9px;font-weight:700;
+  color:var(--muted);background:rgba(255,255,255,.85);padding:0 4px;border-radius:4px}
+.gcel .del{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;
+  background:var(--danger);color:#fff;border:0;font-size:12px;line-height:18px;text-align:center;padding:0}
+.gcel.agregar{border:2px dashed var(--rule);display:flex;align-items:center;justify-content:center;background:#f9fafb}
+.gcel.agregar svg{width:22px;height:22px;stroke:var(--muted);fill:none;stroke-width:2}
+.sin-comp{font-size:12px;color:var(--muted);text-align:center;padding:18px 0;font-style:italic}
+
+/* ---------- Lote (registros ya guardados) ---------- */
+.lote-lista{display:flex;flex-direction:column;gap:10px}
+.lote-item{display:flex;align-items:center;gap:12px;background:var(--plate);border:1px solid var(--rule-soft);
+  border-radius:12px;padding:10px}
+.lote-item img{width:56px;height:56px;border:1px solid var(--rule);border-radius:7px;background:#fff;object-fit:contain;padding:3px}
+.lote-info{flex:1;min-width:0}
+.lote-info h3{margin:0 0 2px;font-size:14px;color:var(--ink);font-family:var(--display);text-transform:uppercase;
+  letter-spacing:.03em}
+.lote-info p{margin:1px 0;font-size:11.5px;color:var(--muted)}
+.lote-badges{display:flex;gap:5px;margin-top:4px;flex-wrap:wrap}
+.badge-mini{font-family:var(--mono);font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px}
+.badge-mini.guia{background:var(--brand-wash);color:var(--brand)}
+.badge-mini.comp{background:var(--brass-wash);color:var(--brass)}
+.badge-mini.pend{background:#f1f1ec;color:var(--muted)}
+.lote-del{background:none;border:0;color:var(--danger);font-size:20px;cursor:pointer;padding:0 6px;flex:0 0 auto}
+
+.buscador{width:100%;padding:11px 14px;border:1px solid var(--rule);border-radius:10px;font-size:14px;
+  margin-bottom:12px;background:#fff}
+
+.exportar-wrap{margin-top:16px}
+.btn-exportar{width:100%;background:#27ae60;color:#fff;border:0;border-radius:11px;padding:15px;
+  font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+.vacio{text-align:center;padding:26px 10px;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-top">
+    <h1>Captura de marcas</h1>
+    <div class="pasos" id="pasosDots"></div>
+  </div>
+  <p class="compra-actual" id="compraActualTxt">Nueva compra</p>
+</header>
+
+<main class="main">
+
+  <!-- PASO 1: marca dominante + datos del propietario -->
+  <section class="paso" id="pasoA">
+    <div class="tarjeta">
+      <h2>Marca dominante</h2>
+      <p class="sub">Dibujá la marca del propietario que vende.</p>
+
+      <div class="canvas-header">
+        <div class="grosor">
+          <span>Grosor</span>
+          <select id="penSizeA">
+            <option value="4">Fino</option>
+            <option value="7" selected>Medio</option>
+            <option value="12">Grueso</option>
+          </select>
+        </div>
+        <label class="chk spen">
+          <input type="checkbox" id="spenOnlyA" checked> Solo S-Pen
+        </label>
+        <label class="chk guia">
+          <input type="checkbox" id="guiaCentroA" checked> Guía central
+        </label>
+      </div>
+
+      <div class="lienzo-wrap">
+        <div class="lienzo-caja" id="cajaA">
+          <canvas id="guiaA"></canvas>
+          <canvas id="dibujoA"></canvas>
+        </div>
+      </div>
+
+      <div class="herramientas">
+        <button class="htool" id="deshacerA" type="button">
+          <svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+          Deshacer
+        </button>
+        <button class="htool" id="ampliarA" type="button">
+          <svg viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>
+          Ampliar
+        </button>
+        <button class="htool borrar" id="borrarA" type="button">
+          <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+          Borrar
+        </button>
+      </div>
+
+      <div class="campo" style="margin-top:14px">
+        <label for="propName">Nombre del propietario</label>
+        <input type="text" id="propName" autocomplete="off">
+      </div>
+      <div class="campo">
+        <label for="propId">Número de cédula</label>
+        <input type="text" id="propId" autocomplete="off" inputmode="text">
+      </div>
+      <div class="campo">
+        <label for="propObs">Observaciones</label>
+        <input type="text" id="propObs" autocomplete="off">
+      </div>
+
+      <div class="acciones">
+        <button class="btn btn-primario" id="irPasoB" type="button">Siguiente: guía →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PASO 2: guía de compra -->
+  <section class="paso" id="pasoB">
+    <div class="tarjeta">
+      <h2>Guía de compra</h2>
+      <p class="sub">Si todavía no la tenés, podés dejarla en blanco y cargarla después desde la computadora.</p>
+
+      <div class="campo">
+        <label for="guiaNumero">Número de guía</label>
+        <input type="text" id="guiaNumero" inputmode="numeric" autocomplete="off">
+      </div>
+      <div class="campo">
+        <label for="guiaFecha">Fecha de la compra</label>
+        <input type="date" id="guiaFecha">
+      </div>
+
+      <div class="acciones">
+        <button class="btn btn-secundario" id="volverPasoA" type="button">← Atrás</button>
+        <button class="btn btn-primario" id="irPasoC" type="button">Siguiente →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PASO 3: marcas complementarias -->
+  <section class="paso" id="pasoC">
+    <div class="tarjeta" id="tarjetaGaleria">
+      <h2>Marcas complementarias</h2>
+      <p class="sub">Marcas de otros propietarios que vinieron en este mismo lote. Es opcional.</p>
+
+      <div class="galeria-cabecera">
+        <span></span>
+        <span class="cnt" id="contadorComp">0 agregadas</span>
+      </div>
+      <div class="galeria" id="galeriaComp"></div>
+
+      <div class="acciones">
+        <button class="btn btn-secundario" id="volverPasoB" type="button">← Atrás</button>
+        <button class="btn btn-exito" id="guardarCompra" type="button">Guardar compra</button>
+      </div>
+    </div>
+
+    <!-- Sub-tarjeta: dibujar una complementaria (se muestra/oculta con JS) -->
+    <div class="tarjeta" id="tarjetaDibujoComp" style="display:none">
+      <h2>Nueva marca complementaria</h2>
+      <p class="sub" id="numeroComp">Marca #1</p>
+
+      <div class="canvas-header">
+        <div class="grosor">
+          <span>Grosor</span>
+          <select id="penSizeC">
+            <option value="4">Fino</option>
+            <option value="7" selected>Medio</option>
+            <option value="12">Grueso</option>
+          </select>
+        </div>
+        <label class="chk spen">
+          <input type="checkbox" id="spenOnlyC" checked> Solo S-Pen
+        </label>
+        <label class="chk guia">
+          <input type="checkbox" id="guiaCentroC" checked> Guía central
+        </label>
+      </div>
+
+      <div class="lienzo-wrap">
+        <div class="lienzo-caja" id="cajaC">
+          <canvas id="guiaC"></canvas>
+          <canvas id="dibujoC"></canvas>
+        </div>
+      </div>
+
+      <div class="herramientas">
+        <button class="htool" id="deshacerC" type="button">
+          <svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+          Deshacer
+        </button>
+        <button class="htool" id="ampliarC" type="button">
+          <svg viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>
+          Ampliar
+        </button>
+        <button class="htool borrar" id="borrarC" type="button">
+          <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+          Borrar
+        </button>
+      </div>
+
+      <div class="campo" style="margin-top:12px">
+        <label for="compNota">Titular anterior (opcional)</label>
+        <input type="text" id="compNota" autocomplete="off">
+      </div>
+
+      <div class="acciones">
+        <button class="btn btn-secundario" id="cancelarComp" type="button">Cancelar</button>
+        <button class="btn btn-primario" id="guardarComp" type="button">Agregar a la guía</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOTE: registros ya guardados en este celular -->
+  <section class="tarjeta" style="margin-top:4px">
+    <h2>Lote actual</h2>
+    <input type="text" class="buscador" id="buscador" placeholder="Filtrar por nombre o cédula…">
+    <div class="lote-lista" id="loteLista"></div>
+    <div class="exportar-wrap">
+      <button class="btn-exportar" id="btnExportar" type="button">Exportar lote a computadora</button>
+    </div>
+  </section>
+
+</main>
+
+<!-- Overlay de pantalla completa: el mismo <canvas> se traslada acá dentro -->
+<div class="pantalla-completa" id="pantallaCompleta">
+  <div class="pc-barra">
+    <span style="color:var(--ink-soft);font-size:13px;font-weight:600">Modo ampliado</span>
+    <button class="cerrar" id="cerrarAmpliado" type="button">Listo</button>
+  </div>
+  <div class="pc-lienzo" id="pcLienzoWrap"></div>
+  <div class="pc-herramientas herramientas">
+    <button class="htool" id="deshacerPC" type="button">
+      <svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+      Deshacer
+    </button>
+    <button class="htool borrar" id="borrarPC" type="button">
+      <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+      Borrar
+    </button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ==========================================================
+   1. MOTOR DE LIENZO — reutilizable para la dominante y cada complementaria
+   ========================================================== */
+function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk){
+  const canvas = document.getElementById(idDibujo);
+  const capaGuia = document.getElementById(idGuia);
+  const ctx = canvas.getContext('2d');
+  const ctxGuia = capaGuia.getContext('2d');
+  const spenChk = document.getElementById(idSpen);
+  const penSel = document.getElementById(idPenSize);
+  const guiaChk = document.getElementById(idGuiaChk);
+
+  let isDrawing = false;
+  let points = [];
+  let historial = [];   // snapshots (dataURL) previos a cada trazo, para "deshacer"
+  let ratio = 1, cssW = 300, cssH = 300;
+
+  ctx.strokeStyle = '#000000';
+  ctx.lineJoin = 'round';
+  ctx.lineCap = 'round';
+
+  function ajustarTamano(){
+    const rect = canvas.getBoundingClientRect();
+    ratio = window.devicePixelRatio || 1;
+    cssW = rect.width; cssH = rect.height;
+    [canvas, capaGuia].forEach(c => {
+      c.width = cssW * ratio; c.height = cssH * ratio;
+    });
+    ctx.setTransform(ratio,0,0,ratio,0,0);
+    ctxGuia.setTransform(ratio,0,0,ratio,0,0);
+    dibujarGuia();
+  }
+
+  // La guía se dibuja en su PROPIO canvas, que nunca se exporta.
+  // Así jamás se mezcla con el trazo real que se manda al sistema.
+  function dibujarGuia(){
+    ctxGuia.clearRect(0,0,cssW,cssH);
+    if(!guiaChk.checked) return;
+    ctxGuia.strokeStyle = '#c9d5de';
+    ctxGuia.lineWidth = 1;
+    ctxGuia.beginPath();
+    ctxGuia.moveTo(cssW/2, cssH*0.12); ctxGuia.lineTo(cssW/2, cssH*0.88);
+    ctxGuia.moveTo(cssW*0.12, cssH/2); ctxGuia.lineTo(cssW*0.88, cssH/2);
+    ctxGuia.stroke();
+  }
+  guiaChk.addEventListener('change', dibujarGuia);
+
+  function getPos(e){
+    const rect = canvas.getBoundingClientRect();
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  }
+
+  function guardarHistorial(){
+    try{ historial.push(canvas.toDataURL()); }catch(_e){}
+    if(historial.length > 25) historial.shift();
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    if (spenChk.checked && e.pointerType === 'touch') return;
+    guardarHistorial();
+    isDrawing = true;
+    points = [];
+    const pos = getPos(e);
+    points.push(pos);
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+    const base = parseFloat(penSel.value);
+    ctx.lineWidth = e.pressure ? Math.max(1, e.pressure * base) : (base * 0.7);
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    if (!isDrawing) return;
+    if (spenChk.checked && e.pointerType === 'touch') return;
+    const pos = getPos(e);
+    const base = parseFloat(penSel.value);
+    ctx.lineWidth = e.pressure ? Math.max(1, e.pressure * base) : (base * 0.7);
+    points.push(pos);
+    if (points.length < 3) return;
+    const p1 = points[points.length - 2];
+    const p2 = points[points.length - 1];
+    const mid = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+    ctx.quadraticCurveTo(p1.x, p1.y, mid.x, mid.y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(mid.x, mid.y);
+  });
+
+  function terminarTrazo(e){
+    if (spenChk.checked && e.pointerType === 'touch') return;
+    isDrawing = false; points = [];
+  }
+  canvas.addEventListener('pointerup', terminarTrazo);
+  canvas.addEventListener('pointerout', terminarTrazo);
+  canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+
+  function borrarTodo(){
+    ctx.clearRect(0,0,cssW,cssH);
+    historial = [];
+  }
+
+  function deshacerUltimoTrazo(){
+    if(!historial.length){ borrarTodo(); return; }
+    const anterior = historial.pop();
+    const img = new Image();
+    img.onload = () => {
+      ctx.clearRect(0,0,cssW,cssH);
+      ctx.drawImage(img, 0, 0, cssW, cssH);
+    };
+    img.src = anterior;
+  }
+
+  function estaVacio(){
+    const blank = document.createElement('canvas');
+    blank.width = canvas.width; blank.height = canvas.height;
+    return canvas.toDataURL() === blank.toDataURL();
+  }
+
+  window.addEventListener('resize', ajustarTamano);
+  ajustarTamano();
+
+  return {
+    canvas, ajustarTamano, borrarTodo, deshacerUltimoTrazo, estaVacio,
+    exportarPNG: () => canvas.toDataURL('image/png', 1.0),
+    reparentar: (nuevoPadreCanvas, nuevoPadreGuia) => {
+      nuevoPadreCanvas.appendChild(capaGuia);
+      nuevoPadreCanvas.appendChild(canvas);
+      ajustarTamano();
+    },
+  };
+}
+
+const lienzoA = crearLienzo('dibujoA','guiaA','penSizeA','spenOnlyA','guiaCentroA');
+const lienzoC = crearLienzo('dibujoC','guiaC','penSizeC','spenOnlyC','guiaCentroC');
+
+document.getElementById('borrarA').onclick = () => lienzoA.borrarTodo();
+document.getElementById('deshacerA').onclick = () => lienzoA.deshacerUltimoTrazo();
+document.getElementById('borrarC').onclick = () => lienzoC.borrarTodo();
+document.getElementById('deshacerC').onclick = () => lienzoC.deshacerUltimoTrazo();
+
+/* ---------- Modo pantalla completa: el MISMO <canvas> se muda al overlay ---------- */
+let lienzoEnPantallaCompleta = null;
+let cajaOriginal = null;
+
+function ampliar(lienzo, cajaOriginalEl){
+  cajaOriginal = cajaOriginalEl;
+  lienzoEnPantallaCompleta = lienzo;
+  const destino = document.getElementById('pcLienzoWrap');
+  destino.innerHTML = '';
+  const caja = document.createElement('div');
+  caja.className = 'lienzo-caja';
+  destino.appendChild(caja);
+  lienzo.reparentar(caja, caja);
+  document.getElementById('pantallaCompleta').classList.add('on');
+}
+function cerrarAmpliado(){
+  if(lienzoEnPantallaCompleta && cajaOriginal){
+    lienzoEnPantallaCompleta.reparentar(cajaOriginal, cajaOriginal);
+  }
+  document.getElementById('pantallaCompleta').classList.remove('on');
+  lienzoEnPantallaCompleta = null;
+}
+document.getElementById('ampliarA').onclick = () => ampliar(lienzoA, document.getElementById('cajaA'));
+document.getElementById('ampliarC').onclick = () => ampliar(lienzoC, document.getElementById('cajaC'));
+document.getElementById('cerrarAmpliado').onclick = cerrarAmpliado;
+document.getElementById('deshacerPC').onclick = () => lienzoEnPantallaCompleta && lienzoEnPantallaCompleta.deshacerUltimoTrazo();
+document.getElementById('borrarPC').onclick = () => lienzoEnPantallaCompleta && lienzoEnPantallaCompleta.borrarTodo();
+
+/* ==========================================================
+   2. FLUJO DE 3 PASOS PARA ARMAR UNA COMPRA
+   ========================================================== */
+const pasos = ['pasoA','pasoB','pasoC'];
+let pasoActual = 0;
+let compraEnCurso = { complementarias: [] };
+
+function mostrarPaso(i){
+  pasoActual = i;
+  pasos.forEach((id, idx) => document.getElementById(id).classList.toggle('activo', idx === i));
+  document.getElementById('pasosDots').innerHTML = pasos.map((_,idx) =>
+    `<span class="paso-dot ${idx===i?'activo':idx<i?'hecho':''}"></span>`).join('');
+  actualizarEncabezado();
+}
+
+function actualizarEncabezado(){
+  const nombre = document.getElementById('propName').value.trim();
+  const txt = document.getElementById('compraActualTxt');
+  const etiquetaPaso = ['Marca dominante','Guía de compra','Complementarias'][pasoActual];
+  txt.innerHTML = nombre
+    ? `<b>${escapeHTML(nombre)}</b> · ${etiquetaPaso}`
+    : `Nueva compra · ${etiquetaPaso}`;
+}
+document.getElementById('propName').addEventListener('input', actualizarEncabezado);
+
+function escapeHTML(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+document.getElementById('irPasoB').onclick = () => {
+  const name = document.getElementById('propName').value.trim();
+  const id = document.getElementById('propId').value.trim();
+  if(lienzoA.estaVacio()){ alert('Falta dibujar la marca dominante.'); return; }
+  if(!name || !id){ alert('Nombre y cédula son obligatorios.'); return; }
+  mostrarPaso(1);
+};
+document.getElementById('volverPasoA').onclick = () => mostrarPaso(0);
+document.getElementById('irPasoC').onclick = () => { renderGaleria(); mostrarPaso(2); };
+document.getElementById('volverPasoB').onclick = () => mostrarPaso(1);
+
+/* ---------- Galería de complementarias ---------- */
+function renderGaleria(){
+  const cont = document.getElementById('galeriaComp');
+  cont.innerHTML = '';
+  compraEnCurso.complementarias.forEach((c, i) => {
+    const cel = document.createElement('div');
+    cel.className = 'gcel';
+    cel.innerHTML = `<span class="num">${i+1}</span><img src="${c.image}" alt="">
+      <button class="del" data-i="${i}" type="button">&times;</button>`;
+    cont.appendChild(cel);
+  });
+  const agregar = document.createElement('button');
+  agregar.type = 'button';
+  agregar.className = 'gcel agregar';
+  agregar.innerHTML = `<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>`;
+  agregar.onclick = abrirDibujoComp;
+  cont.appendChild(agregar);
+
+  cont.querySelectorAll('.del').forEach(b => {
+    b.onclick = (e) => {
+      e.stopPropagation();
+      compraEnCurso.complementarias.splice(parseInt(b.dataset.i), 1);
+      renderGaleria();
+    };
+  });
+  document.getElementById('contadorComp').textContent =
+    compraEnCurso.complementarias.length + (compraEnCurso.complementarias.length === 1 ? ' agregada' : ' agregadas');
+}
+
+function abrirDibujoComp(){
+  lienzoC.borrarTodo();
+  document.getElementById('compNota').value = '';
+  document.getElementById('numeroComp').textContent = 'Marca #' + (compraEnCurso.complementarias.length + 1);
+  document.getElementById('tarjetaGaleria').style.display = 'none';
+  document.getElementById('tarjetaDibujoComp').style.display = 'block';
+  lienzoC.ajustarTamano();
+}
+function cerrarDibujoComp(){
+  document.getElementById('tarjetaGaleria').style.display = 'block';
+  document.getElementById('tarjetaDibujoComp').style.display = 'none';
+}
+document.getElementById('cancelarComp').onclick = cerrarDibujoComp;
+document.getElementById('guardarComp').onclick = () => {
+  if(lienzoC.estaVacio()){ alert('El lienzo de la complementaria está vacío.'); return; }
+  compraEnCurso.complementarias.push({
+    image: lienzoC.exportarPNG(),
+    nota: document.getElementById('compNota').value.trim(),
+  });
+  cerrarDibujoComp();
+  renderGaleria();
+};
+
+/* ==========================================================
+   3. GUARDADO DE LA COMPRA COMPLETA EN EL LOTE
+   ========================================================== */
+let records = JSON.parse(localStorage.getItem('marcas_ganado_hd_lote')) || [];
+
+function limpiarFormularioCompra(){
+  lienzoA.borrarTodo();
+  document.getElementById('propName').value = '';
+  document.getElementById('propId').value = '';
+  document.getElementById('propObs').value = '';
+  document.getElementById('guiaNumero').value = '';
+  document.getElementById('guiaFecha').value = '';
+  compraEnCurso = { complementarias: [] };
+  mostrarPaso(0);
+}
+
+document.getElementById('guardarCompra').onclick = () => {
+  const name = document.getElementById('propName').value.trim();
+  const id = document.getElementById('propId').value.trim();
+  const obs = document.getElementById('propObs').value.trim();
+  const guiaNumero = document.getElementById('guiaNumero').value.trim();
+  const guiaFecha = document.getElementById('guiaFecha').value;
+
+  const registro = {
+    uuid: crypto.randomUUID(),
+    timestamp: new Date().toISOString(),
+    marca_principal: lienzoA.exportarPNG(),
+    name, cedula: id, observaciones: obs,
+  };
+  if(guiaNumero || guiaFecha){
+    registro.guia = { numero: guiaNumero, fecha: guiaFecha };
+  }
+  if(compraEnCurso.complementarias.length){
+    registro.marcas_complementarias = compraEnCurso.complementarias;
+  }
+
+  records.unshift(registro);
+  localStorage.setItem('marcas_ganado_hd_lote', JSON.stringify(records));
+  limpiarFormularioCompra();
+  renderLote();
+};
+
+/* ==========================================================
+   4. LISTA DEL LOTE Y EXPORTACIÓN
+   ========================================================== */
+function renderLote(filtro = ''){
+  const cont = document.getElementById('loteLista');
+  cont.innerHTML = '';
+  const f = filtro.toLowerCase();
+  const filtrados = records.filter(r =>
+    (r.name||'').toLowerCase().includes(f) || (r.cedula||'').includes(filtro));
+
+  if(!filtrados.length){
+    cont.innerHTML = `<p class="vacio">${records.length ? 'Nada coincide con ese filtro.' : 'Todavía no guardaste ninguna compra.'}</p>`;
+    return;
+  }
+
+  filtrados.forEach(r => {
+    const item = document.createElement('div');
+    item.className = 'lote-item';
+    const tieneGuia = r.guia && (r.guia.numero || r.guia.fecha);
+    const nComp = (r.marcas_complementarias || []).length;
+    item.innerHTML = `
+      <img src="${r.marca_principal}" alt="">
+      <div class="lote-info">
+        <h3>${escapeHTML(r.name)}</h3>
+        <p>C.I: ${escapeHTML(r.cedula)}${r.observaciones ? ' · ' + escapeHTML(r.observaciones) : ''}</p>
+        <div class="lote-badges">
+          ${tieneGuia ? `<span class="badge-mini guia">Guía ${escapeHTML(r.guia.numero||'—')}</span>` : `<span class="badge-mini pend">Sin guía</span>`}
+          ${nComp ? `<span class="badge-mini comp">${nComp} compl.</span>` : ''}
+        </div>
+      </div>
+      <button class="lote-del" data-uuid="${r.uuid}" type="button">&times;</button>`;
+    cont.appendChild(item);
+  });
+
+  cont.querySelectorAll('.lote-del').forEach(b => {
+    b.onclick = () => {
+      if(confirm('¿Eliminar esta compra del lote actual?')){
+        records = records.filter(r => r.uuid !== b.dataset.uuid);
+        localStorage.setItem('marcas_ganado_hd_lote', JSON.stringify(records));
+        renderLote(document.getElementById('buscador').value);
+      }
+    };
+  });
+}
+document.getElementById('buscador').addEventListener('input', (e) => renderLote(e.target.value));
+
+document.getElementById('btnExportar').onclick = () => {
+  if(!records.length){ alert('El lote está vacío. No hay compras para exportar.'); return; }
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(records, null, 2));
+  const a = document.createElement('a');
+  a.setAttribute('href', dataStr);
+  const ahora = new Date();
+  const dia = String(ahora.getDate()).padStart(2,'0');
+  const mes = String(ahora.getMonth()+1).padStart(2,'0');
+  const hora = String(ahora.getHours()).padStart(2,'0');
+  const min = String(ahora.getMinutes()).padStart(2,'0');
+  a.setAttribute('download', `Lote_Marcas_${dia}${mes}_${hora}${min}.json`);
+  document.body.appendChild(a); a.click(); a.remove();
+
+  setTimeout(() => {
+    if(confirm('Exportación iniciada. ¿Limpiar este lote para empezar uno nuevo? (Confirmá solo si ya verificaste que el archivo se guardó.)')){
+      records = [];
+      localStorage.setItem('marcas_ganado_hd_lote', JSON.stringify(records));
+      renderLote();
+    }
+  }, 1000);
+};
+
+/* ==========================================================
+   5. INICIO
+   ========================================================== */
+mostrarPaso(0);
+renderLote();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
