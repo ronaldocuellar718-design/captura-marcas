@@ -374,14 +374,38 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk){
 
   function ajustarTamano(){
     const rect = canvas.getBoundingClientRect();
-    ratio = window.devicePixelRatio || 1;
-    cssW = rect.width; cssH = rect.height;
+    const nuevoRatio = window.devicePixelRatio || 1;
+    const nuevoW = rect.width, nuevoH = rect.height;
+
+    // El lienzo esta oculto (paso no activo) y mide 0: NO tocarlo.
+    // Redimensionar un canvas a 0 borra su contenido de forma irreversible.
+    if(nuevoW === 0 || nuevoH === 0) return;
+
+    // Nada cambio de verdad (el teclado del celular dispara "resize" sin que
+    // el tamaño real del lienzo se mueva): no reinicializar, no borrar nada.
+    if(nuevoW === cssW && nuevoH === cssH && ratio === nuevoRatio && canvas.width > 0) return;
+
+    // Un cambio de tamaño real (rotar el telefono, abrir "Ampliar"): se
+    // guarda el dibujo actual antes de redimensionar, porque el propio
+    // redimensionado borra el lienzo, y se restaura despues.
+    let respaldo = null;
+    if(canvas.width > 0 && canvas.height > 0){
+      try{ respaldo = canvas.toDataURL(); }catch(_e){}
+    }
+
+    ratio = nuevoRatio; cssW = nuevoW; cssH = nuevoH;
     [canvas, capaGuia].forEach(c => {
       c.width = cssW * ratio; c.height = cssH * ratio;
     });
     ctx.setTransform(ratio,0,0,ratio,0,0);
     ctxGuia.setTransform(ratio,0,0,ratio,0,0);
     dibujarGuia();
+
+    if(respaldo){
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0, cssW, cssH);
+      img.src = respaldo;
+    }
   }
 
   // La guía se dibuja en su PROPIO canvas, que nunca se exporta.
@@ -469,12 +493,20 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk){
   }
 
   function estaVacio(){
+    if(canvas.width === 0 || canvas.height === 0) return true;
     const blank = document.createElement('canvas');
     blank.width = canvas.width; blank.height = canvas.height;
     return canvas.toDataURL() === blank.toDataURL();
   }
 
-  window.addEventListener('resize', ajustarTamano);
+  // Se observa el propio recuadro del lienzo, no toda la ventana: así el
+  // teclado del celular (que cambia el alto de la ventana, no el ancho del
+  // recuadro) no dispara un reajuste innecesario.
+  if('ResizeObserver' in window){
+    new ResizeObserver(ajustarTamano).observe(canvas.parentElement);
+  } else {
+    window.addEventListener('resize', ajustarTamano);
+  }
   ajustarTamano();
 
   return {
@@ -649,6 +681,11 @@ function limpiarFormularioCompra(){
 }
 
 document.getElementById('guardarCompra').onclick = () => {
+  if(lienzoA.estaVacio()){
+    alert('La marca dominante no está disponible. Volvé al primer paso y confirmá que el dibujo esté ahí antes de guardar.');
+    mostrarPaso(0);
+    return;
+  }
   const name = document.getElementById('propName').value.trim();
   const id = document.getElementById('propId').value.trim();
   const obs = document.getElementById('propObs').value.trim();
