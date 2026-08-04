@@ -61,6 +61,7 @@ button,input,select{font-family:inherit}
 .chk.spen{color:var(--danger);background:var(--danger-wash);padding:5px 9px;border-radius:8px}
 .chk.guia{color:var(--brand);background:var(--brand-wash);padding:5px 9px;border-radius:8px}
 .chk input{width:16px;height:16px;accent-color:currentColor}
+.ayuda-guia{margin:0 0 10px;font-size:11px;color:var(--muted);line-height:1.4}
 
 .lienzo-wrap{position:relative;display:flex;justify-content:center;margin-bottom:10px}
 .lienzo-caja{position:relative;width:min(78vw,320px);aspect-ratio:1;border:2px solid var(--brand-deep);
@@ -182,9 +183,10 @@ button,input,select{font-family:inherit}
           <input type="checkbox" id="spenOnlyA" checked> Solo S-Pen
         </label>
         <label class="chk guia">
-          <input type="checkbox" id="guiaCentroA" checked> Guía central
+          <input type="checkbox" id="guiaCentroA"> Guía central
         </label>
       </div>
+      <p class="ayuda-guia">La cruz marca el centro, es solo una referencia — no hace falta dibujar sobre ella.</p>
 
       <div class="lienzo-wrap">
         <div class="lienzo-caja" id="cajaA">
@@ -209,42 +211,33 @@ button,input,select{font-family:inherit}
       </div>
 
       <div class="campo" style="margin-top:14px">
-        <label for="propName">Nombre del propietario</label>
-        <input type="text" id="propName" autocomplete="off">
+        <label for="propId">Número de cédula</label>
+        <input type="tel" id="propId" autocomplete="off">
       </div>
       <div class="campo">
-        <label for="propId">Número de cédula</label>
-        <input type="text" id="propId" autocomplete="off" inputmode="text">
+        <label for="propName">Nombre del propietario</label>
+        <input type="text" id="propName" autocomplete="off">
       </div>
       <div class="campo">
         <label for="propObs">Observaciones</label>
         <input type="text" id="propObs" autocomplete="off">
       </div>
 
-      <div class="acciones">
-        <button class="btn btn-primario" id="irPasoB" type="button">Siguiente: guía →</button>
+      <div class="fila-dos">
+        <div class="campo">
+          <label for="guiaNumero">Número de guía</label>
+          <input type="text" id="guiaNumero" inputmode="numeric" autocomplete="off">
+        </div>
+        <div class="campo">
+          <label for="guiaFecha">Fecha de compra</label>
+          <input type="text" id="guiaFecha" inputmode="numeric" autocomplete="off"
+                 placeholder="DD/MM/AAAA" maxlength="10">
+        </div>
       </div>
-    </div>
-  </section>
-
-  <!-- PASO 2: guía de compra -->
-  <section class="paso" id="pasoB">
-    <div class="tarjeta">
-      <h2>Guía de compra</h2>
-      <p class="sub">Si todavía no la tenés, podés dejarla en blanco y cargarla después desde la computadora.</p>
-
-      <div class="campo">
-        <label for="guiaNumero">Número de guía</label>
-        <input type="text" id="guiaNumero" inputmode="numeric" autocomplete="off">
-      </div>
-      <div class="campo">
-        <label for="guiaFecha">Fecha de la compra</label>
-        <input type="date" id="guiaFecha">
-      </div>
+      <p class="aviso-obligatorio">Si todavía no tenés la guía, dejala en blanco y cargala después desde la computadora.</p>
 
       <div class="acciones">
-        <button class="btn btn-secundario" id="volverPasoA" type="button">← Atrás</button>
-        <button class="btn btn-primario" id="irPasoC" type="button">Siguiente →</button>
+        <button class="btn btn-primario" id="irPasoC" type="button">Siguiente: complementarias →</button>
       </div>
     </div>
   </section>
@@ -285,9 +278,10 @@ button,input,select{font-family:inherit}
           <input type="checkbox" id="spenOnlyC" checked> Solo S-Pen
         </label>
         <label class="chk guia">
-          <input type="checkbox" id="guiaCentroC" checked> Guía central
+          <input type="checkbox" id="guiaCentroC"> Guía central
         </label>
       </div>
+      <p class="ayuda-guia">La cruz marca el centro, es solo una referencia — no hace falta dibujar sobre ella.</p>
 
       <div class="lienzo-wrap">
         <div class="lienzo-caja" id="cajaC">
@@ -392,17 +386,23 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk){
 
   // La guía se dibuja en su PROPIO canvas, que nunca se exporta.
   // Así jamás se mezcla con el trazo real que se manda al sistema.
+  // Es solo una crucecita chica en el centro, de referencia — no una grilla.
   function dibujarGuia(){
     ctxGuia.clearRect(0,0,cssW,cssH);
     if(!guiaChk.checked) return;
-    ctxGuia.strokeStyle = '#c9d5de';
-    ctxGuia.lineWidth = 1;
+    const largo = Math.min(cssW,cssH) * 0.08;
+    ctxGuia.strokeStyle = '#b7c6d1';
+    ctxGuia.lineWidth = 1.3;
     ctxGuia.beginPath();
-    ctxGuia.moveTo(cssW/2, cssH*0.12); ctxGuia.lineTo(cssW/2, cssH*0.88);
-    ctxGuia.moveTo(cssW*0.12, cssH/2); ctxGuia.lineTo(cssW*0.88, cssH/2);
+    ctxGuia.moveTo(cssW/2 - largo, cssH/2); ctxGuia.lineTo(cssW/2 + largo, cssH/2);
+    ctxGuia.moveTo(cssW/2, cssH/2 - largo); ctxGuia.lineTo(cssW/2, cssH/2 + largo);
     ctxGuia.stroke();
   }
-  guiaChk.addEventListener('change', dibujarGuia);
+  guiaChk.checked = localStorage.getItem('marcas_guia_pref') === '1';
+  guiaChk.addEventListener('change', () => {
+    localStorage.setItem('marcas_guia_pref', guiaChk.checked ? '1' : '0');
+    dibujarGuia();
+  });
 
   function getPos(e){
     const rect = canvas.getBoundingClientRect();
@@ -524,10 +524,27 @@ document.getElementById('cerrarAmpliado').onclick = cerrarAmpliado;
 document.getElementById('deshacerPC').onclick = () => lienzoEnPantallaCompleta && lienzoEnPantallaCompleta.deshacerUltimoTrazo();
 document.getElementById('borrarPC').onclick = () => lienzoEnPantallaCompleta && lienzoEnPantallaCompleta.borrarTodo();
 
+/* ---------- Fecha de tecleo rápido: sin calendario, se formatea sola ---------- */
+const campoFecha = document.getElementById('guiaFecha');
+campoFecha.addEventListener('input', () => {
+  let d = campoFecha.value.replace(/\D/g,'').slice(0,8);
+  let out = d;
+  if(d.length > 4) out = d.slice(0,2) + '/' + d.slice(2,4) + '/' + d.slice(4);
+  else if(d.length > 2) out = d.slice(0,2) + '/' + d.slice(2);
+  campoFecha.value = out;
+});
+
+function fechaAIso(texto){
+  const m = texto.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(!m) return '';
+  const dia = m[1].padStart(2,'0'), mes = m[2].padStart(2,'0'), anio = m[3];
+  return `${anio}-${mes}-${dia}`;
+}
+
 /* ==========================================================
-   2. FLUJO DE 3 PASOS PARA ARMAR UNA COMPRA
+   2. FLUJO DE 2 PASOS PARA ARMAR UNA COMPRA
    ========================================================== */
-const pasos = ['pasoA','pasoB','pasoC'];
+const pasos = ['pasoA','pasoC'];
 let pasoActual = 0;
 let compraEnCurso = { complementarias: [] };
 
@@ -542,7 +559,7 @@ function mostrarPaso(i){
 function actualizarEncabezado(){
   const nombre = document.getElementById('propName').value.trim();
   const txt = document.getElementById('compraActualTxt');
-  const etiquetaPaso = ['Marca dominante','Guía de compra','Complementarias'][pasoActual];
+  const etiquetaPaso = ['Datos de la compra','Complementarias'][pasoActual];
   txt.innerHTML = nombre
     ? `<b>${escapeHTML(nombre)}</b> · ${etiquetaPaso}`
     : `Nueva compra · ${etiquetaPaso}`;
@@ -553,16 +570,15 @@ function escapeHTML(s){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-document.getElementById('irPasoB').onclick = () => {
+document.getElementById('irPasoC').onclick = () => {
   const name = document.getElementById('propName').value.trim();
   const id = document.getElementById('propId').value.trim();
   if(lienzoA.estaVacio()){ alert('Falta dibujar la marca dominante.'); return; }
   if(!name || !id){ alert('Nombre y cédula son obligatorios.'); return; }
+  renderGaleria();
   mostrarPaso(1);
 };
-document.getElementById('volverPasoA').onclick = () => mostrarPaso(0);
-document.getElementById('irPasoC').onclick = () => { renderGaleria(); mostrarPaso(2); };
-document.getElementById('volverPasoB').onclick = () => mostrarPaso(1);
+document.getElementById('volverPasoB').onclick = () => mostrarPaso(0);
 
 /* ---------- Galería de complementarias ---------- */
 function renderGaleria(){
@@ -637,7 +653,8 @@ document.getElementById('guardarCompra').onclick = () => {
   const id = document.getElementById('propId').value.trim();
   const obs = document.getElementById('propObs').value.trim();
   const guiaNumero = document.getElementById('guiaNumero').value.trim();
-  const guiaFecha = document.getElementById('guiaFecha').value;
+  const guiaFechaTexto = document.getElementById('guiaFecha').value.trim();
+  const guiaFecha = fechaAIso(guiaFechaTexto);
 
   const registro = {
     uuid: crypto.randomUUID(),
