@@ -189,8 +189,11 @@ button,input,select{font-family:inherit}
         <label class="chk guia">
           <input type="checkbox" id="guiaCentroA"> Guía central
         </label>
+        <label class="chk guia">
+          <input type="checkbox" id="marcoTamanoA" checked> Marco de tamaño
+        </label>
       </div>
-      <p class="ayuda-guia">La cruz marca el centro, es solo una referencia — no hace falta dibujar sobre ella.</p>
+      <p class="ayuda-guia">El marco punteado es el tamaño recomendado — llenalo sin llegar al borde del lienzo. La cruz marca el centro. Ninguno de los dos se dibuja de verdad, son solo referencia.</p>
 
       <div class="herramientas">
         <button class="htool" id="deshacerA" type="button">
@@ -284,8 +287,11 @@ button,input,select{font-family:inherit}
         <label class="chk guia">
           <input type="checkbox" id="guiaCentroC"> Guía central
         </label>
+        <label class="chk guia">
+          <input type="checkbox" id="marcoTamanoC" checked> Marco de tamaño
+        </label>
       </div>
-      <p class="ayuda-guia">La cruz marca el centro, es solo una referencia — no hace falta dibujar sobre ella.</p>
+      <p class="ayuda-guia">El marco punteado es el tamaño recomendado — llenalo sin llegar al borde del lienzo. La cruz marca el centro. Ninguno de los dos se dibuja de verdad, son solo referencia.</p>
 
       <div class="herramientas">
         <button class="htool" id="deshacerC" type="button">
@@ -361,7 +367,7 @@ button,input,select{font-family:inherit}
 /* ==========================================================
    1. MOTOR DE LIENZO — reutilizable para la dominante y cada complementaria
    ========================================================== */
-function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk){
+function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk, idMarcoChk){
   const canvas = document.getElementById(idDibujo);
   const capaGuia = document.getElementById(idGuia);
   const ctx = canvas.getContext('2d');
@@ -369,6 +375,7 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk){
   const spenChk = document.getElementById(idSpen);
   const penSel = document.getElementById(idPenSize);
   const guiaChk = document.getElementById(idGuiaChk);
+  const marcoChk = document.getElementById(idMarcoChk);
 
   let isDrawing = false;
   let points = [];
@@ -429,21 +436,41 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk){
 
   // La guía se dibuja en su PROPIO canvas, que nunca se exporta.
   // Así jamás se mezcla con el trazo real que se manda al sistema.
-  // Es solo una crucecita chica en el centro, de referencia — no una grilla.
+  // La cruz es solo el centro; el marco punteado es el tamaño recomendado,
+  // pensado para dar noción de escala en un lienzo grande, sin obligar a
+  // llegar justo a esa medida — el sistema normaliza el tamaño de todos
+  // modos, esto es solo para dibujar con más control.
   function dibujarGuia(){
     ctxGuia.clearRect(0,0,cssW,cssH);
-    if(!guiaChk.checked) return;
-    const largo = Math.min(cssW,cssH) * 0.08;
-    ctxGuia.strokeStyle = '#b7c6d1';
-    ctxGuia.lineWidth = 1.3;
-    ctxGuia.beginPath();
-    ctxGuia.moveTo(cssW/2 - largo, cssH/2); ctxGuia.lineTo(cssW/2 + largo, cssH/2);
-    ctxGuia.moveTo(cssW/2, cssH/2 - largo); ctxGuia.lineTo(cssW/2, cssH/2 + largo);
-    ctxGuia.stroke();
+    if(guiaChk.checked){
+      const largo = Math.min(cssW,cssH) * 0.08;
+      ctxGuia.strokeStyle = '#b7c6d1';
+      ctxGuia.lineWidth = 1.3;
+      ctxGuia.setLineDash([]);
+      ctxGuia.beginPath();
+      ctxGuia.moveTo(cssW/2 - largo, cssH/2); ctxGuia.lineTo(cssW/2 + largo, cssH/2);
+      ctxGuia.moveTo(cssW/2, cssH/2 - largo); ctxGuia.lineTo(cssW/2, cssH/2 + largo);
+      ctxGuia.stroke();
+    }
+    if(marcoChk.checked){
+      const ocupacion = 0.76; // mismo criterio que usa la computadora al normalizar
+      const lado = Math.min(cssW,cssH) * ocupacion;
+      const x0 = (cssW - lado)/2, y0 = (cssH - lado)/2;
+      ctxGuia.strokeStyle = '#9fb3c2';
+      ctxGuia.lineWidth = 1.5;
+      ctxGuia.setLineDash([6,5]);
+      ctxGuia.strokeRect(x0, y0, lado, lado);
+      ctxGuia.setLineDash([]);
+    }
   }
   guiaChk.checked = localStorage.getItem('marcas_guia_pref') === '1';
   guiaChk.addEventListener('change', () => {
     localStorage.setItem('marcas_guia_pref', guiaChk.checked ? '1' : '0');
+    dibujarGuia();
+  });
+  marcoChk.checked = localStorage.getItem('marcas_marco_pref') !== '0';
+  marcoChk.addEventListener('change', () => {
+    localStorage.setItem('marcas_marco_pref', marcoChk.checked ? '1' : '0');
     dibujarGuia();
   });
 
@@ -587,8 +614,8 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk){
   };
 }
 
-const lienzoA = crearLienzo('dibujoA','guiaA','penSizeA','spenOnlyA','guiaCentroA');
-const lienzoC = crearLienzo('dibujoC','guiaC','penSizeC','spenOnlyC','guiaCentroC');
+const lienzoA = crearLienzo('dibujoA','guiaA','penSizeA','spenOnlyA','guiaCentroA','marcoTamanoA');
+const lienzoC = crearLienzo('dibujoC','guiaC','penSizeC','spenOnlyC','guiaCentroC','marcoTamanoC');
 
 // Etiqueta numerica junto a cada deslizante de grosor, actualizada en vivo
 ['A','C'].forEach(sufijo => {
