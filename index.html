@@ -72,7 +72,7 @@ button,input,select{font-family:inherit}
 #capaGuia{z-index:1}
 #capaDibujo{z-index:2}
 
-.herramientas{display:flex;gap:8px;margin-bottom:4px}
+.herramientas{display:flex;gap:8px;margin-bottom:12px}
 .htool{flex:1;padding:11px 6px;border-radius:9px;border:1px solid var(--rule);background:#fff;
   color:var(--ink-soft);font-size:12px;font-weight:700;display:flex;flex-direction:column;
   align-items:center;gap:3px;cursor:pointer}
@@ -192,13 +192,6 @@ button,input,select{font-family:inherit}
       </div>
       <p class="ayuda-guia">La cruz marca el centro, es solo una referencia — no hace falta dibujar sobre ella.</p>
 
-      <div class="lienzo-wrap">
-        <div class="lienzo-caja" id="cajaA">
-          <canvas id="guiaA"></canvas>
-          <canvas id="dibujoA"></canvas>
-        </div>
-      </div>
-
       <div class="herramientas">
         <button class="htool" id="deshacerA" type="button">
           <svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
@@ -209,6 +202,14 @@ button,input,select{font-family:inherit}
           Ampliar
         </button>
       </div>
+
+      <div class="lienzo-wrap">
+        <div class="lienzo-caja" id="cajaA">
+          <canvas id="guiaA"></canvas>
+          <canvas id="dibujoA"></canvas>
+        </div>
+      </div>
+
       <div class="borrar-lejos-wrap">
         <button class="borrar-lejos" id="borrarA" type="button">
           <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
@@ -286,13 +287,6 @@ button,input,select{font-family:inherit}
       </div>
       <p class="ayuda-guia">La cruz marca el centro, es solo una referencia — no hace falta dibujar sobre ella.</p>
 
-      <div class="lienzo-wrap">
-        <div class="lienzo-caja" id="cajaC">
-          <canvas id="guiaC"></canvas>
-          <canvas id="dibujoC"></canvas>
-        </div>
-      </div>
-
       <div class="herramientas">
         <button class="htool" id="deshacerC" type="button">
           <svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
@@ -303,6 +297,14 @@ button,input,select{font-family:inherit}
           Ampliar
         </button>
       </div>
+
+      <div class="lienzo-wrap">
+        <div class="lienzo-caja" id="cajaC">
+          <canvas id="guiaC"></canvas>
+          <canvas id="dibujoC"></canvas>
+        </div>
+      </div>
+
       <div class="borrar-lejos-wrap">
         <button class="borrar-lejos" id="borrarC" type="button">
           <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
