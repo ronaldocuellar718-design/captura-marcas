@@ -6,7 +6,7 @@
 //
 // Ningún dato de las marcas pasa por acá — solo los archivos de la app en sí.
 
-const CACHE = 'marcas-app-v2';
+const CACHE = 'marcas-app-v3';
 const ARCHIVOS = ['./', './index.html', './manifest.json',
                   './icons/icon-192.png', './icons/icon-512.png'];
 

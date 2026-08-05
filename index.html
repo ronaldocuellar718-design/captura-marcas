@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Captura de Marcas — Compras Ganadera Bahía Rica</title>
+<title>MarcaDigital — Compras Ganadera Bahía Rica</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#12344f">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -56,6 +56,8 @@ button,input,select{font-family:inherit}
 .canvas-header{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;
   background:#f6f8fa;border:1px solid var(--rule-soft);border-radius:10px;padding:8px 10px;margin-bottom:10px}
 .grosor{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink-soft)}
+.grosor input[type=range]{width:88px;accent-color:var(--brand);height:20px}
+.grosor-valor{font-family:var(--mono);font-size:12px;color:var(--brand);min-width:22px;text-align:right}
 .grosor select{padding:5px 7px;border-radius:6px;border:1px solid var(--rule);background:#fff;font-size:13px}
 .chk{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
 .chk.spen{color:var(--danger);background:var(--danger-wash);padding:5px 9px;border-radius:8px}
@@ -76,7 +78,12 @@ button,input,select{font-family:inherit}
   align-items:center;gap:3px;cursor:pointer}
 .htool:active{background:#f1f5f8}
 .htool.deshabilitado{opacity:.4}
-.htool.borrar{color:var(--danger);border-color:#f0cfc9}
+.borrar-lejos-wrap{display:flex;justify-content:center;margin:2px 0 14px}
+.borrar-lejos{display:flex;align-items:center;gap:6px;background:none;border:0;color:var(--danger);
+  opacity:.7;font-size:12px;font-weight:600;padding:8px 10px;cursor:pointer}
+.borrar-lejos:active{opacity:1}
+.borrar-lejos svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+.pc-barra .borrar-lejos{color:#c0392b;opacity:.75}
 .htool svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
 
 /* ---------- Modo pantalla completa ---------- */
@@ -156,7 +163,7 @@ button,input,select{font-family:inherit}
 
 <header class="masthead">
   <div class="masthead-top">
-    <h1>Captura de marcas</h1>
+    <h1>MarcaDigital</h1>
     <div class="pasos" id="pasosDots"></div>
   </div>
   <p class="compra-actual" id="compraActualTxt">Nueva compra</p>
@@ -173,11 +180,8 @@ button,input,select{font-family:inherit}
       <div class="canvas-header">
         <div class="grosor">
           <span>Grosor</span>
-          <select id="penSizeA">
-            <option value="4">Fino</option>
-            <option value="7" selected>Medio</option>
-            <option value="12">Grueso</option>
-          </select>
+          <input type="range" id="penSizeA" min="2" max="16" step="0.5" value="7">
+          <span class="grosor-valor" id="penSizeAValor">7</span>
         </div>
         <label class="chk spen">
           <input type="checkbox" id="spenOnlyA" checked> Solo S-Pen
@@ -204,9 +208,11 @@ button,input,select{font-family:inherit}
           <svg viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>
           Ampliar
         </button>
-        <button class="htool borrar" id="borrarA" type="button">
+      </div>
+      <div class="borrar-lejos-wrap">
+        <button class="borrar-lejos" id="borrarA" type="button">
           <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
-          Borrar
+          Borrar todo el dibujo
         </button>
       </div>
 
@@ -268,11 +274,8 @@ button,input,select{font-family:inherit}
       <div class="canvas-header">
         <div class="grosor">
           <span>Grosor</span>
-          <select id="penSizeC">
-            <option value="4">Fino</option>
-            <option value="7" selected>Medio</option>
-            <option value="12">Grueso</option>
-          </select>
+          <input type="range" id="penSizeC" min="2" max="16" step="0.5" value="7">
+          <span class="grosor-valor" id="penSizeCValor">7</span>
         </div>
         <label class="chk spen">
           <input type="checkbox" id="spenOnlyC" checked> Solo S-Pen
@@ -299,9 +302,11 @@ button,input,select{font-family:inherit}
           <svg viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>
           Ampliar
         </button>
-        <button class="htool borrar" id="borrarC" type="button">
+      </div>
+      <div class="borrar-lejos-wrap">
+        <button class="borrar-lejos" id="borrarC" type="button">
           <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
-          Borrar
+          Borrar todo el dibujo
         </button>
       </div>
 
@@ -333,6 +338,10 @@ button,input,select{font-family:inherit}
 <div class="pantalla-completa" id="pantallaCompleta">
   <div class="pc-barra">
     <span style="color:var(--ink-soft);font-size:13px;font-weight:600">Modo ampliado</span>
+    <button class="borrar-lejos" id="borrarPC" type="button">
+      <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+      Borrar todo
+    </button>
     <button class="cerrar" id="cerrarAmpliado" type="button">Listo</button>
   </div>
   <div class="pc-lienzo" id="pcLienzoWrap"></div>
@@ -340,10 +349,6 @@ button,input,select{font-family:inherit}
     <button class="htool" id="deshacerPC" type="button">
       <svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
       Deshacer
-    </button>
-    <button class="htool borrar" id="borrarPC" type="button">
-      <svg viewBox="0 0 24 24"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
-      Borrar
     </button>
   </div>
 </div>
@@ -367,6 +372,18 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk){
   let points = [];
   let historial = [];   // snapshots (dataURL) previos a cada trazo, para "deshacer"
   let ratio = 1, cssW = 300, cssH = 300;
+  let contadorPuntos = 0;
+
+  // Cuantos puntos hacen falta para llegar al grosor pleno desde que se
+  // apoya la pluma. Mas alto = punta de entrada mas larga y suave.
+  const RAMPA_INICIO = 7;
+  // Que tan fino queda el trazo con un toque muy suave, como fraccion del
+  // grosor elegido. 0 lo haria desaparecer del todo; no conviene tan bajo.
+  const PISO_GROSOR = 0.55;
+  // Curva de la presion: mayor a 1 da mas control fino en trazos suaves
+  // y una respuesta mas marcada recien con presion fuerte, como una
+  // pluma real en vez de una progresion en linea recta.
+  const CURVA_PRESION = 1.7;
 
   ctx.strokeStyle = '#000000';
   ctx.lineJoin = 'round';
@@ -438,39 +455,87 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk){
     if(historial.length > 25) historial.shift();
   }
 
+  // Traduce la presion del S-Pen a un grosor. Sin dato de presion real
+  // (dedo o mouse) se usa un grosor fijo razonable. Con presion real, se
+  // aplica una curva en vez de una regla de tres directa: control fino
+  // en toques suaves, respuesta mas marcada recien con presion firme.
+  function calcularGrosor(presion, base){
+    if(!presion) return base * 0.7;
+    const p = Math.min(1, Math.max(0, presion));
+    const curva = Math.pow(p, CURVA_PRESION);
+    return base * (PISO_GROSOR + (1 - PISO_GROSOR) * curva);
+  }
+
   canvas.addEventListener('pointerdown', (e) => {
     if (spenChk.checked && e.pointerType === 'touch') return;
     guardarHistorial();
     isDrawing = true;
     points = [];
+    contadorPuntos = 1;
     const pos = getPos(e);
     points.push(pos);
     ctx.beginPath();
     ctx.moveTo(pos.x, pos.y);
     const base = parseFloat(penSel.value);
-    ctx.lineWidth = e.pressure ? Math.max(1, e.pressure * base) : (base * 0.7);
+    // Rampa de entrada: el primer contacto empieza fino, como al apoyar
+    // una pluma de verdad, no de golpe al grosor completo.
+    ctx.lineWidth = calcularGrosor(e.pressure, base) * (1 / RAMPA_INICIO);
   });
 
   canvas.addEventListener('pointermove', (e) => {
     if (!isDrawing) return;
     if (spenChk.checked && e.pointerType === 'touch') return;
-    const pos = getPos(e);
     const base = parseFloat(penSel.value);
-    ctx.lineWidth = e.pressure ? Math.max(1, e.pressure * base) : (base * 0.7);
-    points.push(pos);
-    if (points.length < 3) return;
-    const p1 = points[points.length - 2];
-    const p2 = points[points.length - 1];
-    const mid = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
-    ctx.quadraticCurveTo(p1.x, p1.y, mid.x, mid.y);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(mid.x, mid.y);
+    // getCoalescedEvents junta todos los puntos reales que el sistema ya
+    // capturo entre un cuadro de pantalla y el siguiente. Usar solo el
+    // ultimo (como antes) descarta informacion real y hace la linea mas
+    // angulosa en trazos rapidos; usarlos todos da una curva mas fiel al
+    // movimiento real de la mano, con menos sensacion de demora.
+    const eventos = (e.getCoalescedEvents && e.getCoalescedEvents()) || [e];
+    for(const ev of eventos){
+      const pos = getPos(ev);
+      contadorPuntos++;
+      const rampa = Math.min(1, contadorPuntos / RAMPA_INICIO);
+      ctx.lineWidth = calcularGrosor(ev.pressure, base) * rampa;
+      points.push(pos);
+      if (points.length < 3) continue;
+      const p1 = points[points.length - 2];
+      const p2 = points[points.length - 1];
+      const mid = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+      ctx.quadraticCurveTo(p1.x, p1.y, mid.x, mid.y);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(mid.x, mid.y);
+    }
   });
 
   function terminarTrazo(e){
     if (spenChk.checked && e.pointerType === 'touch') return;
-    isDrawing = false; points = [];
+    // Remate de salida: unos pasos cortos siguiendo la misma direccion,
+    // adelgazando hasta la punta, como al levantar una pluma real en vez
+    // de cortar la linea en seco con el mismo grosor de todo el trazo.
+    if(isDrawing && points.length >= 2){
+      const p1 = points[points.length - 2];
+      const p2 = points[points.length - 1];
+      const dx = p2.x - p1.x, dy = p2.y - p1.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const dirX = dx / dist, dirY = dy / dist;
+      const anchoFinal = ctx.lineWidth;
+      const pasos = 4;
+      let actual = p2;
+      ctx.beginPath();
+      ctx.moveTo(actual.x, actual.y);
+      for(let i = 1; i <= pasos; i++){
+        const t = i / pasos;
+        actual = { x: p2.x + dirX * dist * 0.6 * t, y: p2.y + dirY * dist * 0.6 * t };
+        ctx.lineWidth = anchoFinal * (1 - t * 0.8);
+        ctx.lineTo(actual.x, actual.y);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(actual.x, actual.y);
+      }
+    }
+    isDrawing = false; points = []; contadorPuntos = 0;
   }
   canvas.addEventListener('pointerup', terminarTrazo);
   canvas.addEventListener('pointerout', terminarTrazo);
@@ -523,6 +588,13 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk){
 const lienzoA = crearLienzo('dibujoA','guiaA','penSizeA','spenOnlyA','guiaCentroA');
 const lienzoC = crearLienzo('dibujoC','guiaC','penSizeC','spenOnlyC','guiaCentroC');
 
+// Etiqueta numerica junto a cada deslizante de grosor, actualizada en vivo
+['A','C'].forEach(sufijo => {
+  const rango = document.getElementById('penSize'+sufijo);
+  const valor = document.getElementById('penSize'+sufijo+'Valor');
+  rango.addEventListener('input', () => { valor.textContent = rango.value; });
+});
+
 document.getElementById('borrarA').onclick = () => lienzoA.borrarTodo();
 document.getElementById('deshacerA').onclick = () => lienzoA.deshacerUltimoTrazo();
 document.getElementById('borrarC').onclick = () => lienzoC.borrarTodo();
@@ -540,8 +612,12 @@ function ampliar(lienzo, cajaOriginalEl){
   const caja = document.createElement('div');
   caja.className = 'lienzo-caja';
   destino.appendChild(caja);
-  lienzo.reparentar(caja, caja);
+  // Mostrar la pantalla completa PRIMERO: mientras está oculta, mide "cero"
+  // para el navegador, y si el lienzo se agranda antes de eso, queda
+  // calculando las posiciones del lápiz con el tamaño chico de antes —
+  // por eso el lápiz tocaba en un punto y el trazo aparecía en otro.
   document.getElementById('pantallaCompleta').classList.add('on');
+  lienzo.reparentar(caja, caja);
 }
 function cerrarAmpliado(){
   if(lienzoEnPantallaCompleta && cajaOriginal){

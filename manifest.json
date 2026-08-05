@@ -1,6 +1,6 @@
 {
-  "name": "Captura de Marcas — Bahía Rica",
-  "short_name": "Marcas BR",
+  "name": "MarcaDigital — Compras Ganadera Bahía Rica",
+  "short_name": "MarcaDigital",
   "description": "Captura de marcas de ganado y guías de compra, Compras Ganadera Bahía Rica S.A.",
   "start_url": "./index.html",
   "scope": "./",
