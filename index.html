@@ -184,6 +184,16 @@ button,input,select{font-family:inherit}
 .badge-mini.pend{background:#f1f1ec;color:var(--muted)}
 .lote-del{background:none;border:0;color:var(--danger);font-size:20px;cursor:pointer;padding:0 6px;flex:0 0 auto}
 
+.lote-cabecera{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:4px}
+.lote-tamano{font-family:var(--mono);font-size:11px;color:var(--muted)}
+.aviso-espacio{background:var(--brass-wash);border:1px solid var(--brass-line);border-radius:10px;
+  padding:10px 12px;margin-bottom:12px}
+.aviso-espacio-fila{display:flex;gap:8px;align-items:flex-start}
+.aviso-espacio-fila svg{width:18px;height:18px;stroke:var(--brass);fill:none;stroke-width:2;flex-shrink:0;margin-top:1px}
+.aviso-espacio-titulo{font-size:12px;font-weight:700;color:var(--brass)}
+.aviso-espacio-texto{font-size:11px;color:#6b5410;margin-top:2px;line-height:1.35}
+.aviso-espacio-btn{width:100%;margin-top:8px;padding:9px;border:0;border-radius:8px;
+  background:var(--brass);color:#fff;font-size:12px;font-weight:700}
 .buscador{width:100%;padding:11px 14px;border:1px solid var(--rule);border-radius:10px;font-size:14px;
   margin-bottom:12px;background:#fff}
 
@@ -374,7 +384,20 @@ button,input,select{font-family:inherit}
 
   <!-- LOTE: registros ya guardados en este celular -->
   <section class="tarjeta" style="margin-top:4px">
-    <h2>Lote actual</h2>
+    <div class="lote-cabecera">
+      <h2>Lote actual</h2>
+      <span class="lote-tamano" id="loteTamano"></span>
+    </div>
+    <div class="aviso-espacio" id="avisoEspacio" style="display:none">
+      <div class="aviso-espacio-fila">
+        <svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01M10.3 3.9 2.5 17a2 2 0 0 0 1.7 3h15.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+        <div>
+          <div class="aviso-espacio-titulo">El lote está pesando bastante</div>
+          <div class="aviso-espacio-texto" id="avisoEspacioTexto"></div>
+        </div>
+      </div>
+      <button class="aviso-espacio-btn" id="btnExportarAviso" type="button">Exportar ahora</button>
+    </div>
     <input type="text" class="buscador" id="buscador" placeholder="Filtrar por nombre o cédula…">
     <div class="lote-lista" id="loteLista"></div>
     <div class="exportar-wrap">
@@ -1096,15 +1119,59 @@ document.getElementById('guardarCompra').onclick = () => {
   }
 
   records.unshift(registro);
-  localStorage.setItem('marcas_ganado_hd_lote', JSON.stringify(records));
+  if(!guardarLoteEnStorage(records)){
+    records.shift();  // el guardado falló: se deshace el agregado en memoria, no queda un estado falso
+    return;            // no se limpia el formulario -- la marca dibujada sigue ahí para reintentar
+  }
   limpiarFormularioCompra();
   renderLote();
 };
 
 /* ==========================================================
+   3.1 GUARDADO PROTEGIDO: si el navegador se queda sin espacio,
+   localStorage.setItem falla en silencio si no se lo controla.
+   Esta función avisa de inmediato en vez de dejar que pase
+   desapercibido -- es la causa más probable de compras "perdidas".
+   ========================================================== */
+function guardarLoteEnStorage(lista){
+  try{
+    localStorage.setItem('marcas_ganado_hd_lote', JSON.stringify(lista));
+    return true;
+  }catch(_e){
+    alert('No se pudo guardar: el espacio de este celular para la app está lleno.\n\n' +
+          'Esta compra NO se guardó. Exportá el lote a la computadora ahora mismo ' +
+          '(con lo que ya tenías) y después probá de nuevo.');
+    return false;
+  }
+}
+
+// Umbral en bytes a partir del cual se avisa que conviene exportar.
+// Los navegadores suelen dar entre 5 y 10 MB por app; 2.5 MB deja
+// margen de sobra para seguir trabajando sin apuro.
+const UMBRAL_AVISO_ESPACIO = 2.5 * 1024 * 1024;
+
+function actualizarAvisoEspacio(){
+  const bytes = new Blob([JSON.stringify(records)]).size;
+  const mb = bytes / (1024*1024);
+  document.getElementById('loteTamano').textContent =
+    records.length ? `${records.length} compra(s) · ${mb.toFixed(1)} MB` : '';
+
+  const aviso = document.getElementById('avisoEspacio');
+  if(bytes >= UMBRAL_AVISO_ESPACIO){
+    aviso.style.display = 'block';
+    document.getElementById('avisoEspacioTexto').textContent =
+      `${mb.toFixed(1)} MB guardados sin exportar. Conviene exportarlo pronto, antes de que el espacio del celular se llene.`;
+  } else {
+    aviso.style.display = 'none';
+  }
+}
+
+
+/* ==========================================================
    4. LISTA DEL LOTE Y EXPORTACIÓN
    ========================================================== */
 function renderLote(filtro = ''){
+  actualizarAvisoEspacio();
   const cont = document.getElementById('loteLista');
   cont.innerHTML = '';
   const f = filtro.toLowerCase();
@@ -1139,7 +1206,7 @@ function renderLote(filtro = ''){
     b.onclick = () => {
       if(confirm('¿Eliminar esta compra del lote actual?')){
         records = records.filter(r => r.uuid !== b.dataset.uuid);
-        localStorage.setItem('marcas_ganado_hd_lote', JSON.stringify(records));
+        guardarLoteEnStorage(records);
         renderLote(document.getElementById('buscador').value);
       }
     };
@@ -1147,7 +1214,7 @@ function renderLote(filtro = ''){
 }
 document.getElementById('buscador').addEventListener('input', (e) => renderLote(e.target.value));
 
-document.getElementById('btnExportar').onclick = () => {
+function exportarLote(){
   if(!records.length){ alert('El lote está vacío. No hay compras para exportar.'); return; }
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(records, null, 2));
   const a = document.createElement('a');
@@ -1163,11 +1230,13 @@ document.getElementById('btnExportar').onclick = () => {
   setTimeout(() => {
     if(confirm('Exportación iniciada. ¿Limpiar este lote para empezar uno nuevo? (Confirmá solo si ya verificaste que el archivo se guardó.)')){
       records = [];
-      localStorage.setItem('marcas_ganado_hd_lote', JSON.stringify(records));
+      guardarLoteEnStorage(records);
       renderLote();
     }
   }, 1000);
-};
+}
+document.getElementById('btnExportar').onclick = exportarLote;
+document.getElementById('btnExportarAviso').onclick = exportarLote;
 
 /* ==========================================================
    5. INICIO
