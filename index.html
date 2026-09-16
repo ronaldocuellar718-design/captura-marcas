@@ -97,6 +97,40 @@ button,input,select{font-family:inherit}
 .pc-lienzo .lienzo-caja{width:min(88vw,88vh);}
 .pc-herramientas{padding:10px 14px calc(10px + env(safe-area-inset-bottom))}
 
+/* ---------- Pantalla: cargar marca desde foto ---------- */
+.pantalla-foto{position:fixed;inset:0;z-index:100;background:var(--ground);display:none;
+  flex-direction:column;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.pantalla-foto.on{display:flex}
+.pf-barra{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;
+  background:var(--brand-deep);color:#fff}
+.pf-barra span{font-weight:700;font-size:14px}
+.pf-barra .cerrar{background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:12px}
+.pf-cuerpo{flex:1;overflow-y:auto;padding:18px}
+.pf-paso{max-width:420px;margin:0 auto}
+.pf-ayuda{font-size:12px;color:var(--muted);margin:0 0 16px;line-height:1.4}
+.pf-btn-grande{width:100%;display:flex;align-items:center;gap:10px;padding:16px;margin-bottom:12px;
+  border-radius:12px;border:1.5px solid var(--brand);background:#fff;color:var(--brand);
+  font-size:14px;font-weight:700}
+.pf-btn-grande svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2}
+.pf-btn-grande.pf-primario{background:var(--brand);color:#fff;border-color:var(--brand)}
+
+#pfMarcoImagen{position:relative;width:100%;aspect-ratio:1;background:#1a1a1a;border-radius:10px;
+  overflow:hidden;touch-action:none}
+#pfImgFuente{position:absolute;max-width:100%;max-height:100%;top:50%;left:50%;transform:translate(-50%,-50%)}
+#pfRecorte{position:absolute;border:2px solid var(--brass);box-shadow:0 0 0 2000px rgba(15,31,44,.55);cursor:move}
+.pf-handle{position:absolute;width:22px;height:22px;background:var(--brass);border-radius:50%;
+  border:2px solid #fff}
+.pf-handle[data-esq="tl"]{top:-11px;left:-11px;cursor:nwse-resize}
+.pf-handle[data-esq="tr"]{top:-11px;right:-11px;cursor:nesw-resize}
+.pf-handle[data-esq="bl"]{bottom:-11px;left:-11px;cursor:nesw-resize}
+.pf-handle[data-esq="br"]{bottom:-11px;right:-11px;cursor:nwse-resize}
+
+#pfCanvasBN{width:100%;aspect-ratio:1;border-radius:10px;border:1px solid var(--rule);background:#fff}
+.pf-slider-fila{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted)}
+.pf-slider-fila svg{stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
+.pf-slider-fila input[type=range]{flex:1;accent-color:var(--brand)}
+.pf-acciones{display:flex;gap:10px;margin-top:6px}
+
 /* ---------- Campos ---------- */
 .campo{margin-bottom:12px}
 .campo label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;
@@ -204,6 +238,10 @@ button,input,select{font-family:inherit}
           <svg viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>
           Ampliar
         </button>
+        <button class="htool" id="usarFotoA" type="button">
+          <svg viewBox="0 0 24 24"><path d="M4 8V6a2 2 0 0 1 2-2h1l1.5-2h7L17 4h1a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.5"/></svg>
+          Usar foto
+        </button>
       </div>
 
       <div class="lienzo-wrap">
@@ -302,6 +340,10 @@ button,input,select{font-family:inherit}
           <svg viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></svg>
           Ampliar
         </button>
+        <button class="htool" id="usarFotoC" type="button">
+          <svg viewBox="0 0 24 24"><path d="M4 8V6a2 2 0 0 1 2-2h1l1.5-2h7L17 4h1a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.5"/></svg>
+          Usar foto
+        </button>
       </div>
 
       <div class="lienzo-wrap">
@@ -358,6 +400,65 @@ button,input,select{font-family:inherit}
       <svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
       Deshacer
     </button>
+  </div>
+</div>
+
+<!-- Pantalla completa: cargar una marca desde una foto en vez de dibujarla -->
+<div class="pantalla-foto" id="pantallaFoto">
+  <div class="pf-barra">
+    <span id="pfTitulo">Cargar marca desde foto</span>
+    <button class="cerrar" id="pfCerrar" type="button">Cancelar</button>
+  </div>
+
+  <div class="pf-cuerpo">
+    <!-- Paso 1: elegir origen -->
+    <div id="pfElegir" class="pf-paso">
+      <p class="pf-ayuda">Sirve para marcas ya prolijas — impresas o hechas por computadora.
+        No hace falta esto si la vas a dibujar vos.</p>
+      <button class="pf-btn-grande pf-primario" id="pfBtnCamara" type="button">
+        <svg viewBox="0 0 24 24"><path d="M4 8V6a2 2 0 0 1 2-2h1l1.5-2h7L17 4h1a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z"/><circle cx="12" cy="13" r="3.5"/></svg>
+        Sacar foto
+      </button>
+      <button class="pf-btn-grande" id="pfBtnGaleria" type="button">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="m4 18 5-5 4 4 3-3 4 4"/></svg>
+        Elegir de galería
+      </button>
+      <input type="file" accept="image/*" capture="environment" id="pfInputCamara" style="display:none">
+      <input type="file" accept="image/*" id="pfInputGaleria" style="display:none">
+    </div>
+
+    <!-- Paso 2: recortar -->
+    <div id="pfRecortar" class="pf-paso" style="display:none">
+      <p class="pf-ayuda">Arrastrá el rectángulo para encuadrar solo la marca.</p>
+      <div id="pfMarcoImagen">
+        <img id="pfImgFuente" alt="">
+        <div id="pfRecorte">
+          <div class="pf-handle" data-esq="tl"></div>
+          <div class="pf-handle" data-esq="tr"></div>
+          <div class="pf-handle" data-esq="bl"></div>
+          <div class="pf-handle" data-esq="br"></div>
+        </div>
+      </div>
+      <div class="pf-acciones">
+        <button class="btn btn-secundario" id="pfCancelarRecorte" type="button">Cancelar</button>
+        <button class="btn btn-primario" id="pfSiguienteRecorte" type="button">Siguiente</button>
+      </div>
+    </div>
+
+    <!-- Paso 3: ajustar contraste -->
+    <div id="pfAjustar" class="pf-paso" style="display:none">
+      <p class="pf-ayuda">Ajustá hasta que se vea limpia, como dibujada.</p>
+      <canvas id="pfCanvasBN"></canvas>
+      <div class="pf-slider-fila">
+        <svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <input type="range" id="pfSliderUmbral" min="10" max="240" value="128">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></svg>
+      </div>
+      <div class="pf-acciones">
+        <button class="btn btn-secundario" id="pfAtrasAjustar" type="button">Atrás</button>
+        <button class="btn btn-primario" id="pfConfirmarAjustar" type="button">Confirmar</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -570,9 +671,34 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk, idMarcoChk)
   canvas.addEventListener('pointerout', terminarTrazo);
   canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
 
+  // Si la marca se cargo desde una foto (en vez de dibujada a mano), se
+  // marca aca. Viaja en el JSON para que la computadora sepa que no debe
+  // aplicarle el realce normal -- esa marca ya viene limpia, solo hay que
+  // ajustarle el tamano.
+  let origenFoto = false;
+
   function borrarTodo(){
     ctx.clearRect(0,0,cssW,cssH);
     historial = [];
+    origenFoto = false;
+  }
+
+  function colocarImagenFoto(dataUrl){
+    return new Promise((resolve) => {
+      guardarHistorial();
+      const img = new Image();
+      img.onload = () => {
+        ctx.clearRect(0,0,cssW,cssH);
+        // Se centra y se ajusta dentro del lienzo sin deformar la marca,
+        // dejando aire igual que al dibujar.
+        const escala = Math.min(cssW/img.width, cssH/img.height) * 0.94;
+        const w = img.width*escala, h = img.height*escala;
+        ctx.drawImage(img, (cssW-w)/2, (cssH-h)/2, w, h);
+        origenFoto = true;
+        resolve();
+      };
+      img.src = dataUrl;
+    });
   }
 
   function deshacerUltimoTrazo(){
@@ -605,6 +731,7 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk, idMarcoChk)
 
   return {
     canvas, ajustarTamano, borrarTodo, deshacerUltimoTrazo, estaVacio,
+    colocarImagenFoto, esFoto: () => origenFoto,
     exportarPNG: () => canvas.toDataURL('image/png', 1.0),
     reparentar: (nuevoPadreCanvas, nuevoPadreGuia) => {
       nuevoPadreCanvas.appendChild(capaGuia);
@@ -660,6 +787,160 @@ document.getElementById('ampliarC').onclick = () => ampliar(lienzoC, document.ge
 document.getElementById('cerrarAmpliado').onclick = cerrarAmpliado;
 document.getElementById('deshacerPC').onclick = () => lienzoEnPantallaCompleta && lienzoEnPantallaCompleta.deshacerUltimoTrazo();
 document.getElementById('borrarPC').onclick = () => lienzoEnPantallaCompleta && lienzoEnPantallaCompleta.borrarTodo();
+
+/* ==========================================================
+   FLUJO: cargar una marca desde una foto (en vez de dibujarla)
+   ========================================================== */
+let pfLienzoActual = null;      // lienzoA o lienzoC, segun de donde se abrio
+let pfCanvasOrigenListo = null; // canvas con la imagen ya recortada, antes de aplicar blanco y negro
+
+function abrirPantallaFoto(lienzo){
+  pfLienzoActual = lienzo;
+  document.getElementById('pfElegir').style.display = 'block';
+  document.getElementById('pfRecortar').style.display = 'none';
+  document.getElementById('pfAjustar').style.display = 'none';
+  document.getElementById('pfTitulo').textContent = 'Cargar marca desde foto';
+  document.getElementById('pantallaFoto').classList.add('on');
+}
+function cerrarPantallaFoto(){
+  document.getElementById('pantallaFoto').classList.remove('on');
+  document.getElementById('pfInputCamara').value = '';
+  document.getElementById('pfInputGaleria').value = '';
+  pfLienzoActual = null;
+  pfCanvasOrigenListo = null;
+}
+document.getElementById('usarFotoA').onclick = () => abrirPantallaFoto(lienzoA);
+document.getElementById('usarFotoC').onclick = () => abrirPantallaFoto(lienzoC);
+document.getElementById('pfCerrar').onclick = cerrarPantallaFoto;
+
+const pfInputCamara = document.getElementById('pfInputCamara');
+const pfInputGaleria = document.getElementById('pfInputGaleria');
+document.getElementById('pfBtnCamara').onclick = () => pfInputCamara.click();
+document.getElementById('pfBtnGaleria').onclick = () => pfInputGaleria.click();
+
+function pfCargarImagenElegida(archivo){
+  if(!archivo) return;
+  const lector = new FileReader();
+  lector.onload = (e) => {
+    const img = document.getElementById('pfImgFuente');
+    img.onload = () => {
+      document.getElementById('pfElegir').style.display = 'none';
+      document.getElementById('pfRecortar').style.display = 'block';
+      document.getElementById('pfTitulo').textContent = 'Recortar marca';
+      const marco = document.getElementById('pfMarcoImagen').getBoundingClientRect();
+      const rec = document.getElementById('pfRecorte');
+      const lado = Math.min(marco.width, marco.height) * 0.6;
+      rec.style.width = lado+'px'; rec.style.height = lado+'px';
+      rec.style.left = ((marco.width-lado)/2)+'px';
+      rec.style.top = ((marco.height-lado)/2)+'px';
+    };
+    img.src = e.target.result;
+  };
+  lector.readAsDataURL(archivo);
+}
+pfInputCamara.addEventListener('change', (e) => pfCargarImagenElegida(e.target.files[0]));
+pfInputGaleria.addEventListener('change', (e) => pfCargarImagenElegida(e.target.files[0]));
+
+/* ---------- Recorte: arrastrar el rectangulo y sus esquinas ---------- */
+const pfRecorte = document.getElementById('pfRecorte');
+const pfMarco = document.getElementById('pfMarcoImagen');
+let pfArrastre = null;
+
+pfRecorte.addEventListener('pointerdown', (e) => {
+  const esq = e.target.dataset.esq;
+  pfArrastre = { tipo: esq ? 'resize' : 'mover', esq, x0: e.clientX, y0: e.clientY,
+    rect: { left: pfRecorte.offsetLeft, top: pfRecorte.offsetTop, w: pfRecorte.offsetWidth, h: pfRecorte.offsetHeight } };
+  e.preventDefault();
+});
+window.addEventListener('pointermove', (e) => {
+  if(!pfArrastre) return;
+  const b = pfMarco.getBoundingClientRect();
+  const dx = e.clientX - pfArrastre.x0, dy = e.clientY - pfArrastre.y0;
+  let { left, top, w, h } = pfArrastre.rect;
+  if(pfArrastre.tipo === 'mover'){
+    left = Math.max(0, Math.min(b.width - w, left + dx));
+    top = Math.max(0, Math.min(b.height - h, top + dy));
+  } else {
+    if(pfArrastre.esq.includes('r')) w = Math.max(30, Math.min(b.width - left, w + dx));
+    if(pfArrastre.esq.includes('l')){ const nw = Math.max(30, w - dx); left = left + (w - nw); w = nw; left = Math.max(0,left); }
+    if(pfArrastre.esq.includes('b')) h = Math.max(30, Math.min(b.height - top, h + dy));
+    if(pfArrastre.esq.includes('t')){ const nh = Math.max(30, h - dy); top = top + (h - nh); h = nh; top = Math.max(0,top); }
+  }
+  pfRecorte.style.left = left+'px'; pfRecorte.style.top = top+'px';
+  pfRecorte.style.width = w+'px'; pfRecorte.style.height = h+'px';
+});
+window.addEventListener('pointerup', () => { pfArrastre = null; });
+
+document.getElementById('pfCancelarRecorte').onclick = () => {
+  document.getElementById('pfRecortar').style.display = 'none';
+  document.getElementById('pfElegir').style.display = 'block';
+  document.getElementById('pfTitulo').textContent = 'Cargar marca desde foto';
+};
+
+/* ---------- Paso a "ajustar contraste", con el recorte ya resuelto ---------- */
+const pfCanvasBN = document.getElementById('pfCanvasBN');
+const pfSliderUmbral = document.getElementById('pfSliderUmbral');
+
+document.getElementById('pfSiguienteRecorte').onclick = () => {
+  const img = document.getElementById('pfImgFuente');
+  const imgRect = img.getBoundingClientRect();
+  const recRect = pfRecorte.getBoundingClientRect();
+  const escalaX = img.naturalWidth / imgRect.width;
+  const escalaY = img.naturalHeight / imgRect.height;
+  const sx = (recRect.left - imgRect.left) * escalaX;
+  const sy = (recRect.top - imgRect.top) * escalaY;
+  const sw = recRect.width * escalaX;
+  const sh = recRect.height * escalaY;
+
+  const tmp = document.createElement('canvas');
+  tmp.width = 600; tmp.height = 600;
+  tmp.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, 600, 600);
+  pfCanvasOrigenListo = tmp;
+
+  pfCanvasBN.width = 600; pfCanvasBN.height = 600;
+  const guardado = parseInt(localStorage.getItem('marcas_umbral_bn_pref') || '128', 10);
+  pfSliderUmbral.value = guardado;
+
+  document.getElementById('pfRecortar').style.display = 'none';
+  document.getElementById('pfAjustar').style.display = 'block';
+  document.getElementById('pfTitulo').textContent = 'Ajustar contraste';
+  pfAplicarUmbral();
+};
+
+// Convierte a blanco y negro puro, con el fondo TRANSPARENTE (no blanco):
+// asi la marca fotografiada queda en el mismo formato que una dibujada a
+// mano, sin necesitar ningun tratamiento especial del lado de la computadora.
+function pfAplicarUmbral(){
+  if(!pfCanvasOrigenListo) return;
+  const ctx = pfCanvasBN.getContext('2d');
+  ctx.clearRect(0,0,pfCanvasBN.width,pfCanvasBN.height);
+  ctx.drawImage(pfCanvasOrigenListo, 0, 0);
+  const datos = ctx.getImageData(0,0,pfCanvasBN.width,pfCanvasBN.height);
+  const umbral = parseInt(pfSliderUmbral.value, 10);
+  const p = datos.data;
+  for(let i=0;i<p.length;i+=4){
+    const gris = 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2];
+    if(gris < umbral){
+      p[i]=0; p[i+1]=0; p[i+2]=0; p[i+3]=255;      // tinta: negro solido
+    } else {
+      p[i+3]=0;                                     // fondo: transparente
+    }
+  }
+  ctx.putImageData(datos, 0, 0);
+}
+pfSliderUmbral.addEventListener('input', pfAplicarUmbral);
+
+document.getElementById('pfAtrasAjustar').onclick = () => {
+  document.getElementById('pfAjustar').style.display = 'none';
+  document.getElementById('pfRecortar').style.display = 'block';
+  document.getElementById('pfTitulo').textContent = 'Recortar marca';
+};
+
+document.getElementById('pfConfirmarAjustar').onclick = () => {
+  localStorage.setItem('marcas_umbral_bn_pref', pfSliderUmbral.value);
+  const resultado = pfCanvasBN.toDataURL('image/png');
+  pfLienzoActual.colocarImagenFoto(resultado).then(cerrarPantallaFoto);
+};
 
 /* ---------- Fecha de tecleo rápido: sin calendario, se formatea sola ---------- */
 const campoFecha = document.getElementById('guiaFecha');
@@ -761,10 +1042,12 @@ function cerrarDibujoComp(){
 document.getElementById('cancelarComp').onclick = cerrarDibujoComp;
 document.getElementById('guardarComp').onclick = () => {
   if(lienzoC.estaVacio()){ alert('El lienzo de la complementaria está vacío.'); return; }
-  compraEnCurso.complementarias.push({
+  const item = {
     image: lienzoC.exportarPNG(),
     nota: document.getElementById('compNota').value.trim(),
-  });
+  };
+  if(lienzoC.esFoto()) item.origen = 'foto';
+  compraEnCurso.complementarias.push(item);
   cerrarDibujoComp();
   renderGaleria();
 };
@@ -804,6 +1087,7 @@ document.getElementById('guardarCompra').onclick = () => {
     marca_principal: lienzoA.exportarPNG(),
     name, cedula: id, observaciones: obs,
   };
+  if(lienzoA.esFoto()) registro.origen_marca_principal = 'foto';
   if(guiaNumero || guiaFecha){
     registro.guia = { numero: guiaNumero, fecha: guiaFecha };
   }
