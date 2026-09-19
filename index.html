@@ -30,6 +30,10 @@ button,input,select{font-family:inherit}
 .masthead-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .masthead-top h1{margin:0;font-family:var(--display);text-transform:uppercase;letter-spacing:.08em;
   font-size:15px;font-weight:700}
+.masthead-btns{display:flex;gap:6px;align-items:center}
+.masthead-btn{background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:8px;padding:8px 12px;
+  font-size:13px;font-weight:600;cursor:pointer}
+.masthead-btn:active{background:rgba(255,255,255,.25)}
 .pasos{display:flex;gap:5px}
 .paso-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25)}
 .paso-dot.activo{background:#fff}
@@ -131,6 +135,35 @@ button,input,select{font-family:inherit}
 .pf-slider-fila input[type=range]{flex:1;accent-color:var(--brand)}
 .pf-acciones{display:flex;gap:10px;margin-top:6px}
 
+/* ---------- Pantalla de captura de anexo ---------- */
+.pantalla-anexo{position:fixed;inset:0;z-index:99;background:var(--ground);display:none;
+  flex-direction:column;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.pantalla-anexo.on{display:flex}
+.anexo-barra{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;
+  background:var(--brand-deep);color:#fff;border-bottom:1px solid rgba(255,255,255,.1)}
+.anexo-barra span{font-weight:700;font-size:14px}
+.anexo-barra .cerrar{background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:8px;padding:8px 14px;font-size:12px}
+.anexo-cuerpo{flex:1;overflow-y:auto;padding:16px}
+.anexo-seccion{background:var(--plate);border-radius:12px;border:1px solid var(--rule-soft);
+  padding:16px;margin-bottom:14px}
+.anexo-titulo{font-family:var(--display);text-transform:uppercase;letter-spacing:.07em;
+  font-size:13px;font-weight:700;color:var(--brand-deep);margin:0 0 8px}
+.anexo-ayuda{font-size:12px;color:var(--muted);margin:0 0 12px;line-height:1.4}
+.anexo-canvas{width:100%;aspect-ratio:4/3;border:1px solid var(--rule);border-radius:10px;
+  background:#f9f9f9;margin-bottom:12px}
+.anexo-metricas{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:12px 0}
+.anexo-metrica{background:#f6f8fa;border-radius:10px;padding:12px;text-align:center;border-left:3px solid var(--brand)}
+.anexo-metrica-label{font-size:11px;color:var(--muted);margin-bottom:6px}
+.anexo-metrica-valor{font-size:22px;font-weight:700;color:var(--brand);font-family:var(--mono)}
+.anexo-botones{display:flex;gap:10px}
+.btn{flex:1;padding:12px;border-radius:10px;border:0;font-size:13px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.03em;cursor:pointer}
+.btn-primario{background:var(--brand);color:#fff}
+.btn-primario:active{background:var(--brand-deep)}
+.btn-primario:disabled{opacity:.5;cursor:not-allowed}
+.btn-secundario{background:#fff;color:var(--brand);border:1px solid var(--brand)}
+.btn-secundario:active{background:var(--brand-wash)}
+
 /* ---------- Campos ---------- */
 .campo{margin-bottom:12px}
 .campo label{display:block;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;
@@ -141,17 +174,6 @@ button,input,select{font-family:inherit}
 .fila-dos .campo{flex:1}
 
 .aviso-obligatorio{font-size:11px;color:var(--muted);margin:-6px 0 12px}
-
-/* ---------- Botonera ---------- */
-.acciones{display:flex;gap:10px;margin-top:4px}
-.btn{flex:1;padding:14px;border-radius:10px;border:0;font-size:14px;font-weight:700;
-  text-transform:uppercase;letter-spacing:.03em;cursor:pointer}
-.btn-primario{background:var(--brand);color:#fff}
-.btn-primario:active{background:var(--brand-deep)}
-.btn-secundario{background:#fff;color:var(--brand);border:1px solid var(--brand)}
-.btn-exito{background:#27ae60;color:#fff}
-.btn-exito:active{background:#219150}
-.btn.deshabilitado{opacity:.45;pointer-events:none}
 
 /* ---------- Galería de complementarias ---------- */
 .galeria-cabecera{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
@@ -208,6 +230,9 @@ button,input,select{font-family:inherit}
 <header class="masthead">
   <div class="masthead-top">
     <h1>MarcaDigital</h1>
+    <div class="masthead-btns">
+      <button class="masthead-btn" id="btnCapturarAnexo" title="Capturar anexo desde foto">📷</button>
+    </div>
     <div class="pasos" id="pasosDots"></div>
   </div>
   <p class="compra-actual" id="compraActualTxt">Nueva compra</p>
@@ -314,7 +339,7 @@ button,input,select{font-family:inherit}
 
       <div class="acciones">
         <button class="btn btn-secundario" id="volverPasoB" type="button">← Atrás</button>
-        <button class="btn btn-exito" id="guardarCompra" type="button">Guardar compra</button>
+        <button class="btn btn-primario" id="guardarCompra" type="button">Guardar compra</button>
       </div>
     </div>
 
@@ -407,7 +432,7 @@ button,input,select{font-family:inherit}
 
 </main>
 
-<!-- Overlay de pantalla completa: el mismo <canvas> se traslada acá dentro -->
+<!-- PANTALLA COMPLETA: dibujo ampliado -->
 <div class="pantalla-completa" id="pantallaCompleta">
   <div class="pc-barra">
     <span style="color:var(--ink-soft);font-size:13px;font-weight:600">Modo ampliado</span>
@@ -426,7 +451,7 @@ button,input,select{font-family:inherit}
   </div>
 </div>
 
-<!-- Pantalla completa: cargar una marca desde una foto en vez de dibujarla -->
+<!-- PANTALLA: cargar marca desde una foto -->
 <div class="pantalla-foto" id="pantallaFoto">
   <div class="pf-barra">
     <span id="pfTitulo">Cargar marca desde foto</span>
@@ -485,11 +510,67 @@ button,input,select{font-family:inherit}
   </div>
 </div>
 
+<!-- PANTALLA: capturar anexo desde foto -->
+<div class="pantalla-anexo" id="pantallaAnexo">
+  <div class="anexo-barra">
+    <span>Capturar anexo</span>
+    <button class="cerrar" id="cerrarAnexo" type="button">Cerrar</button>
+  </div>
+
+  <div class="anexo-cuerpo">
+    <!-- Paso 1: cargar foto -->
+    <div class="anexo-seccion">
+      <h3 class="anexo-titulo">Paso 1: Cargar foto</h3>
+      <p class="anexo-ayuda">Toma una foto del anexo o selecciona una de tu galería.</p>
+      <div style="display:flex; gap: 10px;">
+        <button class="btn btn-primario" id="anexoBtnCamara" style="flex:1; margin:0;">📷 Cámara</button>
+        <button class="btn btn-primario" id="anexoBtnGaleria" style="flex:1; margin:0;">📁 Galería</button>
+      </div>
+      <input type="file" accept="image/*" capture="environment" id="anexoInputCamara" style="display:none">
+      <input type="file" accept="image/*" id="anexoInputGaleria" style="display:none">
+    </div>
+
+    <!-- Paso 2: ajustar área -->
+    <div class="anexo-seccion" id="anexoSeccion2" style="display:none;">
+      <h3 class="anexo-titulo">Paso 2: Ajustar área</h3>
+      <p class="anexo-ayuda">Arrastra el rectángulo para definir el área con los marcas.</p>
+      <canvas id="anexoCanvasSource" class="anexo-canvas"></canvas>
+      <div class="anexo-botones">
+        <button class="btn btn-secundario" id="anexoBtnResetear">Resetear</button>
+        <button class="btn btn-primario" id="anexoBtnProcesar">Procesar</button>
+      </div>
+    </div>
+
+    <!-- Paso 3: vista previa -->
+    <div class="anexo-seccion" id="anexoSeccion3" style="display:none;">
+      <h3 class="anexo-titulo">Vista previa (blanco/negro)</h3>
+      <canvas id="anexoCanvasPreview" class="anexo-canvas"></canvas>
+
+      <div class="anexo-metricas">
+        <div class="anexo-metrica">
+          <div class="anexo-metrica-label">Marcas detectadas</div>
+          <div class="anexo-metrica-valor" id="anexoMarcasCount">0</div>
+        </div>
+        <div class="anexo-metrica">
+          <div class="anexo-metrica-label">Calidad</div>
+          <div class="anexo-metrica-valor" id="anexoQualidad">—</div>
+        </div>
+      </div>
+
+      <div class="anexo-botones">
+        <button class="btn btn-primario" id="anexoBtnDescargar" style="grid-column:1/3;">⬇️ Descargar PNG</button>
+        <button class="btn btn-primario" id="anexoBtnEnviar" style="grid-column:1/3;">Enviar lote</button>
+        <button class="btn btn-secundario" id="anexoBtnLimpiar" style="grid-column:1/3;">🗑️ Limpiar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 "use strict";
 
 /* ==========================================================
-   1. MOTOR DE LIENZO — reutilizable para la dominante y cada complementaria
+   1. MOTOR DE LIENZO — reutilizable para dominante y complementarias
    ========================================================== */
 function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk, idMarcoChk){
   const canvas = document.getElementById(idDibujo);
@@ -503,19 +584,12 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk, idMarcoChk)
 
   let isDrawing = false;
   let points = [];
-  let historial = [];   // snapshots (dataURL) previos a cada trazo, para "deshacer"
+  let historial = [];
   let ratio = 1, cssW = 300, cssH = 300;
   let contadorPuntos = 0;
 
-  // Cuantos puntos hacen falta para llegar al grosor pleno desde que se
-  // apoya la pluma. Mas alto = punta de entrada mas larga y suave.
   const RAMPA_INICIO = 7;
-  // Que tan fino queda el trazo con un toque muy suave, como fraccion del
-  // grosor elegido. 0 lo haria desaparecer del todo; no conviene tan bajo.
   const PISO_GROSOR = 0.55;
-  // Curva de la presion: mayor a 1 da mas control fino en trazos suaves
-  // y una respuesta mas marcada recien con presion fuerte, como una
-  // pluma real en vez de una progresion en linea recta.
   const CURVA_PRESION = 1.7;
 
   ctx.strokeStyle = '#000000';
@@ -527,17 +601,9 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk, idMarcoChk)
     const nuevoRatio = window.devicePixelRatio || 1;
     const nuevoW = rect.width, nuevoH = rect.height;
 
-    // El lienzo esta oculto (paso no activo) y mide 0: NO tocarlo.
-    // Redimensionar un canvas a 0 borra su contenido de forma irreversible.
     if(nuevoW === 0 || nuevoH === 0) return;
-
-    // Nada cambio de verdad (el teclado del celular dispara "resize" sin que
-    // el tamaño real del lienzo se mueva): no reinicializar, no borrar nada.
     if(nuevoW === cssW && nuevoH === cssH && ratio === nuevoRatio && canvas.width > 0) return;
 
-    // Un cambio de tamaño real (rotar el telefono, abrir "Ampliar"): se
-    // guarda el dibujo actual antes de redimensionar, porque el propio
-    // redimensionado borra el lienzo, y se restaura despues.
     let respaldo = null;
     if(canvas.width > 0 && canvas.height > 0){
       try{ respaldo = canvas.toDataURL(); }catch(_e){}
@@ -558,12 +624,6 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk, idMarcoChk)
     }
   }
 
-  // La guía se dibuja en su PROPIO canvas, que nunca se exporta.
-  // Así jamás se mezcla con el trazo real que se manda al sistema.
-  // La cruz es solo el centro; el marco punteado es el tamaño recomendado,
-  // pensado para dar noción de escala en un lienzo grande, sin obligar a
-  // llegar justo a esa medida — el sistema normaliza el tamaño de todos
-  // modos, esto es solo para dibujar con más control.
   function dibujarGuia(){
     ctxGuia.clearRect(0,0,cssW,cssH);
     if(guiaChk.checked){
@@ -577,7 +637,7 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk, idMarcoChk)
       ctxGuia.stroke();
     }
     if(marcoChk.checked){
-      const ocupacion = 0.76; // mismo criterio que usa la computadora al normalizar
+      const ocupacion = 0.76;
       const lado = Math.min(cssW,cssH) * ocupacion;
       const x0 = (cssW - lado)/2, y0 = (cssH - lado)/2;
       ctxGuia.strokeStyle = '#9fb3c2';
@@ -608,10 +668,6 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk, idMarcoChk)
     if(historial.length > 25) historial.shift();
   }
 
-  // Traduce la presion del S-Pen a un grosor. Sin dato de presion real
-  // (dedo o mouse) se usa un grosor fijo razonable. Con presion real, se
-  // aplica una curva en vez de una regla de tres directa: control fino
-  // en toques suaves, respuesta mas marcada recien con presion firme.
   function calcularGrosor(presion, base){
     if(!presion) return base * 0.7;
     const p = Math.min(1, Math.max(0, presion));
@@ -630,8 +686,6 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk, idMarcoChk)
     ctx.beginPath();
     ctx.moveTo(pos.x, pos.y);
     const base = parseFloat(penSel.value);
-    // Rampa de entrada: el primer contacto empieza fino, como al apoyar
-    // una pluma de verdad, no de golpe al grosor completo.
     ctx.lineWidth = calcularGrosor(e.pressure, base) * (1 / RAMPA_INICIO);
   });
 
@@ -639,11 +693,6 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk, idMarcoChk)
     if (!isDrawing) return;
     if (spenChk.checked && e.pointerType === 'touch') return;
     const base = parseFloat(penSel.value);
-    // getCoalescedEvents junta todos los puntos reales que el sistema ya
-    // capturo entre un cuadro de pantalla y el siguiente. Usar solo el
-    // ultimo (como antes) descarta informacion real y hace la linea mas
-    // angulosa en trazos rapidos; usarlos todos da una curva mas fiel al
-    // movimiento real de la mano, con menos sensacion de demora.
     const eventos = (e.getCoalescedEvents && e.getCoalescedEvents()) || [e];
     for(const ev of eventos){
       const pos = getPos(ev);
@@ -664,9 +713,6 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk, idMarcoChk)
 
   function terminarTrazo(e){
     if (spenChk.checked && e.pointerType === 'touch') return;
-    // Remate de salida: unos pasos cortos siguiendo la misma direccion,
-    // adelgazando hasta la punta, como al levantar una pluma real en vez
-    // de cortar la linea en seco con el mismo grosor de todo el trazo.
     if(isDrawing && points.length >= 2){
       const p1 = points[points.length - 2];
       const p2 = points[points.length - 1];
@@ -694,10 +740,6 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk, idMarcoChk)
   canvas.addEventListener('pointerout', terminarTrazo);
   canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
 
-  // Si la marca se cargo desde una foto (en vez de dibujada a mano), se
-  // marca aca. Viaja en el JSON para que la computadora sepa que no debe
-  // aplicarle el realce normal -- esa marca ya viene limpia, solo hay que
-  // ajustarle el tamano.
   let origenFoto = false;
 
   function borrarTodo(){
@@ -712,8 +754,6 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk, idMarcoChk)
       const img = new Image();
       img.onload = () => {
         ctx.clearRect(0,0,cssW,cssH);
-        // Se centra y se ajusta dentro del lienzo sin deformar la marca,
-        // dejando aire igual que al dibujar.
         const escala = Math.min(cssW/img.width, cssH/img.height) * 0.94;
         const w = img.width*escala, h = img.height*escala;
         ctx.drawImage(img, (cssW-w)/2, (cssH-h)/2, w, h);
@@ -742,9 +782,6 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk, idMarcoChk)
     return canvas.toDataURL() === blank.toDataURL();
   }
 
-  // Se observa el propio recuadro del lienzo, no toda la ventana: así el
-  // teclado del celular (que cambia el alto de la ventana, no el ancho del
-  // recuadro) no dispara un reajuste innecesario.
   if('ResizeObserver' in window){
     new ResizeObserver(ajustarTamano).observe(canvas.parentElement);
   } else {
@@ -767,7 +804,6 @@ function crearLienzo(idDibujo, idGuia, idPenSize, idSpen, idGuiaChk, idMarcoChk)
 const lienzoA = crearLienzo('dibujoA','guiaA','penSizeA','spenOnlyA','guiaCentroA','marcoTamanoA');
 const lienzoC = crearLienzo('dibujoC','guiaC','penSizeC','spenOnlyC','guiaCentroC','marcoTamanoC');
 
-// Etiqueta numerica junto a cada deslizante de grosor, actualizada en vivo
 ['A','C'].forEach(sufijo => {
   const rango = document.getElementById('penSize'+sufijo);
   const valor = document.getElementById('penSize'+sufijo+'Valor');
@@ -779,7 +815,7 @@ document.getElementById('deshacerA').onclick = () => lienzoA.deshacerUltimoTrazo
 document.getElementById('borrarC').onclick = () => lienzoC.borrarTodo();
 document.getElementById('deshacerC').onclick = () => lienzoC.deshacerUltimoTrazo();
 
-/* ---------- Modo pantalla completa: el MISMO <canvas> se muda al overlay ---------- */
+/* ---------- Modo pantalla completa ---------- */
 let lienzoEnPantallaCompleta = null;
 let cajaOriginal = null;
 
@@ -791,10 +827,6 @@ function ampliar(lienzo, cajaOriginalEl){
   const caja = document.createElement('div');
   caja.className = 'lienzo-caja';
   destino.appendChild(caja);
-  // Mostrar la pantalla completa PRIMERO: mientras está oculta, mide "cero"
-  // para el navegador, y si el lienzo se agranda antes de eso, queda
-  // calculando las posiciones del lápiz con el tamaño chico de antes —
-  // por eso el lápiz tocaba en un punto y el trazo aparecía en otro.
   document.getElementById('pantallaCompleta').classList.add('on');
   lienzo.reparentar(caja, caja);
 }
@@ -812,10 +844,10 @@ document.getElementById('deshacerPC').onclick = () => lienzoEnPantallaCompleta &
 document.getElementById('borrarPC').onclick = () => lienzoEnPantallaCompleta && lienzoEnPantallaCompleta.borrarTodo();
 
 /* ==========================================================
-   FLUJO: cargar una marca desde una foto (en vez de dibujarla)
+   FLUJO: cargar marca desde foto
    ========================================================== */
-let pfLienzoActual = null;      // lienzoA o lienzoC, segun de donde se abrio
-let pfCanvasOrigenListo = null; // canvas con la imagen ya recortada, antes de aplicar blanco y negro
+let pfLienzoActual = null;
+let pfCanvasOrigenListo = null;
 
 function abrirPantallaFoto(lienzo){
   pfLienzoActual = lienzo;
@@ -864,7 +896,7 @@ function pfCargarImagenElegida(archivo){
 pfInputCamara.addEventListener('change', (e) => pfCargarImagenElegida(e.target.files[0]));
 pfInputGaleria.addEventListener('change', (e) => pfCargarImagenElegida(e.target.files[0]));
 
-/* ---------- Recorte: arrastrar el rectangulo y sus esquinas ---------- */
+/* ---------- Recorte: arrastrar rectangulo ---------- */
 const pfRecorte = document.getElementById('pfRecorte');
 const pfMarco = document.getElementById('pfMarcoImagen');
 let pfArrastre = null;
@@ -900,7 +932,7 @@ document.getElementById('pfCancelarRecorte').onclick = () => {
   document.getElementById('pfTitulo').textContent = 'Cargar marca desde foto';
 };
 
-/* ---------- Paso a "ajustar contraste", con el recorte ya resuelto ---------- */
+/* ---------- Paso a ajustar contraste ---------- */
 const pfCanvasBN = document.getElementById('pfCanvasBN');
 const pfSliderUmbral = document.getElementById('pfSliderUmbral');
 
@@ -930,9 +962,6 @@ document.getElementById('pfSiguienteRecorte').onclick = () => {
   pfAplicarUmbral();
 };
 
-// Convierte a blanco y negro puro, con el fondo TRANSPARENTE (no blanco):
-// asi la marca fotografiada queda en el mismo formato que una dibujada a
-// mano, sin necesitar ningun tratamiento especial del lado de la computadora.
 function pfAplicarUmbral(){
   if(!pfCanvasOrigenListo) return;
   const ctx = pfCanvasBN.getContext('2d');
@@ -944,9 +973,9 @@ function pfAplicarUmbral(){
   for(let i=0;i<p.length;i+=4){
     const gris = 0.299*p[i] + 0.587*p[i+1] + 0.114*p[i+2];
     if(gris < umbral){
-      p[i]=0; p[i+1]=0; p[i+2]=0; p[i+3]=255;      // tinta: negro solido
+      p[i]=0; p[i+1]=0; p[i+2]=0; p[i+3]=255;
     } else {
-      p[i+3]=0;                                     // fondo: transparente
+      p[i+3]=0;
     }
   }
   ctx.putImageData(datos, 0, 0);
@@ -965,7 +994,7 @@ document.getElementById('pfConfirmarAjustar').onclick = () => {
   pfLienzoActual.colocarImagenFoto(resultado).then(cerrarPantallaFoto);
 };
 
-/* ---------- Fecha de tecleo rápido: sin calendario, se formatea sola ---------- */
+/* ---------- Fecha de tecleo rápido ---------- */
 const campoFecha = document.getElementById('guiaFecha');
 campoFecha.addEventListener('input', () => {
   let d = campoFecha.value.replace(/\D/g,'').slice(0,8);
@@ -983,7 +1012,7 @@ function fechaAIso(texto){
 }
 
 /* ==========================================================
-   2. FLUJO DE 2 PASOS PARA ARMAR UNA COMPRA
+   2. FLUJO DE 2 PASOS: DOMINATE + COMPLEMENTARIAS
    ========================================================== */
 const pasos = ['pasoA','pasoC'];
 let pasoActual = 0;
@@ -1076,7 +1105,7 @@ document.getElementById('guardarComp').onclick = () => {
 };
 
 /* ==========================================================
-   3. GUARDADO DE LA COMPRA COMPLETA EN EL LOTE
+   3. GUARDADO DE LA COMPRA
    ========================================================== */
 let records = JSON.parse(localStorage.getItem('marcas_ganado_hd_lote')) || [];
 
@@ -1120,19 +1149,13 @@ document.getElementById('guardarCompra').onclick = () => {
 
   records.unshift(registro);
   if(!guardarLoteEnStorage(records)){
-    records.shift();  // el guardado falló: se deshace el agregado en memoria, no queda un estado falso
-    return;            // no se limpia el formulario -- la marca dibujada sigue ahí para reintentar
+    records.shift();
+    return;
   }
   limpiarFormularioCompra();
   renderLote();
 };
 
-/* ==========================================================
-   3.1 GUARDADO PROTEGIDO: si el navegador se queda sin espacio,
-   localStorage.setItem falla en silencio si no se lo controla.
-   Esta función avisa de inmediato en vez de dejar que pase
-   desapercibido -- es la causa más probable de compras "perdidas".
-   ========================================================== */
 function guardarLoteEnStorage(lista){
   try{
     localStorage.setItem('marcas_ganado_hd_lote', JSON.stringify(lista));
@@ -1145,9 +1168,6 @@ function guardarLoteEnStorage(lista){
   }
 }
 
-// Umbral en bytes a partir del cual se avisa que conviene exportar.
-// Los navegadores suelen dar entre 5 y 10 MB por app; 2.5 MB deja
-// margen de sobra para seguir trabajando sin apuro.
 const UMBRAL_AVISO_ESPACIO = 2.5 * 1024 * 1024;
 
 function actualizarAvisoEspacio(){
@@ -1165,7 +1185,6 @@ function actualizarAvisoEspacio(){
     aviso.style.display = 'none';
   }
 }
-
 
 /* ==========================================================
    4. LISTA DEL LOTE Y EXPORTACIÓN
@@ -1239,7 +1258,388 @@ document.getElementById('btnExportar').onclick = exportarLote;
 document.getElementById('btnExportarAviso').onclick = exportarLote;
 
 /* ==========================================================
-   5. INICIO
+   5. CAPTURA DE ANEXO (nuevo módulo)
+   ========================================================== */
+
+// Variables globales para el módulo anexo
+let anexoFoto = null;
+let anexoCropRect = { x: 0, y: 0, width: 0, height: 0 };
+let anexoDraggingCrop = false;
+let anexoDragCorner = null;
+let anexoProcessedImage = null;
+
+const anexoSourceCanvas = document.getElementById('anexoCanvasSource');
+const anexoPreviewCanvas = document.getElementById('anexoCanvasPreview');
+const anexoSourceCtx = anexoSourceCanvas.getContext('2d');
+const anexoPreviewCtx = anexoPreviewCanvas.getContext('2d');
+
+function abrirPantallaAnexo(){
+  document.getElementById('pantallaAnexo').classList.add('on');
+  resetAnexo();
+}
+
+function cerrarPantallaAnexo(){
+  document.getElementById('pantallaAnexo').classList.remove('on');
+  resetAnexo();
+}
+
+function resetAnexo(){
+  anexoFoto = null;
+  anexoProcessedImage = null;
+  anexoSourceCanvas.width = 0;
+  anexoSourceCanvas.height = 0;
+  anexoPreviewCanvas.width = 0;
+  anexoPreviewCanvas.height = 0;
+  document.getElementById('anexoSeccion2').style.display = 'none';
+  document.getElementById('anexoSeccion3').style.display = 'none';
+  document.getElementById('anexoInputCamara').value = '';
+  document.getElementById('anexoInputGaleria').value = '';
+  document.getElementById('anexoMarcasCount').textContent = '0';
+  document.getElementById('anexoQualidad').textContent = '—';
+}
+
+document.getElementById('btnCapturarAnexo').onclick = abrirPantallaAnexo;
+document.getElementById('cerrarAnexo').onclick = cerrarPantallaAnexo;
+
+const anexoInputCamara = document.getElementById('anexoInputCamara');
+const anexoInputGaleria = document.getElementById('anexoInputGaleria');
+document.getElementById('anexoBtnCamara').onclick = () => anexoInputCamara.click();
+document.getElementById('anexoBtnGaleria').onclick = () => anexoInputGaleria.click();
+
+function anexoCargarImagen(archivo){
+  if(!archivo) return;
+  const lector = new FileReader();
+  lector.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      anexoFoto = img;
+      anexoSourceCanvas.width = img.width;
+      anexoSourceCanvas.height = img.height;
+      anexoSourceCtx.drawImage(img, 0, 0);
+
+      anexoCropRect = {
+        x: img.width * 0.1,
+        y: img.height * 0.1,
+        width: img.width * 0.8,
+        height: img.height * 0.8
+      };
+
+      anexoDibujarRecorte();
+      document.getElementById('anexoSeccion2').style.display = 'block';
+      document.getElementById('anexoSeccion3').style.display = 'none';
+    };
+    img.src = e.target.result;
+  };
+  lector.readAsDataURL(archivo);
+}
+
+anexoInputCamara.addEventListener('change', (e) => anexoCargarImagen(e.target.files[0]));
+anexoInputGaleria.addEventListener('change', (e) => anexoCargarImagen(e.target.files[0]));
+
+function anexoDibujarRecorte(){
+  if(!anexoFoto) return;
+  anexoSourceCtx.drawImage(anexoFoto, 0, 0);
+  anexoSourceCtx.strokeStyle = '#8a6a12';
+  anexoSourceCtx.lineWidth = 2;
+  anexoSourceCtx.setLineDash([6, 4]);
+  anexoSourceCtx.strokeRect(anexoCropRect.x, anexoCropRect.y, anexoCropRect.width, anexoCropRect.height);
+  anexoSourceCtx.setLineDash([]);
+
+  const handleSize = 8;
+  anexoSourceCtx.fillStyle = '#8a6a12';
+  const corners = [
+    { x: anexoCropRect.x, y: anexoCropRect.y },
+    { x: anexoCropRect.x + anexoCropRect.width, y: anexoCropRect.y },
+    { x: anexoCropRect.x, y: anexoCropRect.y + anexoCropRect.height },
+    { x: anexoCropRect.x + anexoCropRect.width, y: anexoCropRect.y + anexoCropRect.height }
+  ];
+  corners.forEach(corner => {
+    anexoSourceCtx.fillRect(corner.x - handleSize / 2, corner.y - handleSize / 2, handleSize, handleSize);
+  });
+}
+
+anexoSourceCanvas.addEventListener('mousedown', (e) => {
+  const rect = anexoSourceCanvas.getBoundingClientRect();
+  const x = (e.clientX - rect.left) * (anexoSourceCanvas.width / rect.width);
+  const y = (e.clientY - rect.top) * (anexoSourceCanvas.height / rect.height);
+  anexoDragCorner = anexoGetCornerAtPoint(x, y);
+  if(anexoDragCorner) anexoDraggingCrop = true;
+});
+
+document.addEventListener('mousemove', (e) => {
+  if(!anexoDraggingCrop || !anexoDragCorner) return;
+  const rect = anexoSourceCanvas.getBoundingClientRect();
+  const x = (e.clientX - rect.left) * (anexoSourceCanvas.width / rect.width);
+  const y = (e.clientY - rect.top) * (anexoSourceCanvas.height / rect.height);
+  anexoUpdateCropCorner(anexoDragCorner, x, y);
+  anexoDibujarRecorte();
+});
+
+document.addEventListener('mouseup', () => {
+  anexoDraggingCrop = false;
+  anexoDragCorner = null;
+});
+
+function anexoGetCornerAtPoint(x, y, threshold = 20){
+  const corners = [
+    { id: 'tl', x: anexoCropRect.x, y: anexoCropRect.y },
+    { id: 'tr', x: anexoCropRect.x + anexoCropRect.width, y: anexoCropRect.y },
+    { id: 'bl', x: anexoCropRect.x, y: anexoCropRect.y + anexoCropRect.height },
+    { id: 'br', x: anexoCropRect.x + anexoCropRect.width, y: anexoCropRect.y + anexoCropRect.height }
+  ];
+  for(let corner of corners){
+    if(Math.abs(x - corner.x) < threshold && Math.abs(y - corner.y) < threshold){
+      return corner.id;
+    }
+  }
+  return null;
+}
+
+function anexoUpdateCropCorner(corner, x, y){
+  const minSize = 100;
+  switch(corner){
+    case 'tl':
+      anexoCropRect.x = Math.max(0, Math.min(x, anexoCropRect.x + anexoCropRect.width - minSize));
+      anexoCropRect.y = Math.max(0, Math.min(y, anexoCropRect.y + anexoCropRect.height - minSize));
+      anexoCropRect.width = (anexoCropRect.x + anexoCropRect.width) - anexoCropRect.x;
+      anexoCropRect.height = (anexoCropRect.y + anexoCropRect.height) - anexoCropRect.y;
+      break;
+    case 'tr':
+      anexoCropRect.y = Math.max(0, Math.min(y, anexoCropRect.y + anexoCropRect.height - minSize));
+      anexoCropRect.width = Math.max(minSize, x - anexoCropRect.x);
+      anexoCropRect.height = (anexoCropRect.y + anexoCropRect.height) - anexoCropRect.y;
+      break;
+    case 'bl':
+      anexoCropRect.x = Math.max(0, Math.min(x, anexoCropRect.x + anexoCropRect.width - minSize));
+      anexoCropRect.width = (anexoCropRect.x + anexoCropRect.width) - anexoCropRect.x;
+      anexoCropRect.height = Math.max(minSize, y - anexoCropRect.y);
+      break;
+    case 'br':
+      anexoCropRect.width = Math.max(minSize, x - anexoCropRect.x);
+      anexoCropRect.height = Math.max(minSize, y - anexoCropRect.y);
+      break;
+  }
+}
+
+document.getElementById('anexoBtnResetear').onclick = () => {
+  if(!anexoFoto) return;
+  anexoCropRect = {
+    x: anexoFoto.width * 0.1,
+    y: anexoFoto.height * 0.1,
+    width: anexoFoto.width * 0.8,
+    height: anexoFoto.height * 0.8
+  };
+  anexoDibujarRecorte();
+};
+
+document.getElementById('anexoBtnProcesar').onclick = () => {
+  if(!anexoFoto) return;
+
+  const croppedCanvas = document.createElement('canvas');
+  croppedCanvas.width = anexoCropRect.width;
+  croppedCanvas.height = anexoCropRect.height;
+  const croppedCtx = croppedCanvas.getContext('2d');
+  croppedCtx.drawImage(anexoFoto, anexoCropRect.x, anexoCropRect.y, anexoCropRect.width, anexoCropRect.height, 0, 0, anexoCropRect.width, anexoCropRect.height);
+
+  const imageData = croppedCtx.getImageData(0, 0, anexoCropRect.width, anexoCropRect.height);
+  const data = imageData.data;
+
+  for(let i = 0; i < data.length; i += 4){
+    const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+    data[i] = gray;
+    data[i + 1] = gray;
+    data[i + 2] = gray;
+  }
+
+  croppedCtx.putImageData(imageData, 0, 0);
+
+  let imgData = croppedCtx.getImageData(0, 0, anexoCropRect.width, anexoCropRect.height);
+  let pixelData = imgData.data;
+
+  const contrastFactor = 1.5;
+  const brightnessFactor = 1.1;
+  const centerBrightness = 127.5;
+
+  for(let i = 0; i < pixelData.length; i += 4){
+    let gray = pixelData[i];
+    gray = (gray - centerBrightness) * contrastFactor + centerBrightness;
+    gray = gray * brightnessFactor;
+    gray = Math.max(0, Math.min(255, gray));
+    pixelData[i] = gray;
+    pixelData[i + 1] = gray;
+    pixelData[i + 2] = gray;
+  }
+
+  croppedCtx.putImageData(imgData, 0, 0);
+
+  const threshold = anexoCalculateOtsuThreshold(pixelData);
+  const appliedThreshold = Math.max(threshold - 15, 140);
+
+  imgData = croppedCtx.getImageData(0, 0, anexoCropRect.width, anexoCropRect.height);
+  pixelData = imgData.data;
+
+  for(let i = 0; i < pixelData.length; i += 4){
+    const gray = pixelData[i];
+    const bw = gray > appliedThreshold ? 255 : 0;
+    pixelData[i] = bw;
+    pixelData[i + 1] = bw;
+    pixelData[i + 2] = bw;
+  }
+
+  croppedCtx.putImageData(imgData, 0, 0);
+
+  anexoApplyMedianFilter(croppedCtx, anexoCropRect.width, anexoCropRect.height);
+
+  const borderSize = 40;
+  const finalCanvas = document.createElement('canvas');
+  finalCanvas.width = anexoCropRect.width + borderSize * 2;
+  finalCanvas.height = anexoCropRect.height + borderSize * 2;
+  const finalCtx = finalCanvas.getContext('2d');
+
+  finalCtx.fillStyle = 'white';
+  finalCtx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+  finalCtx.drawImage(croppedCanvas, borderSize, borderSize);
+
+  anexoProcessedImage = finalCanvas;
+
+  anexoPreviewCanvas.width = finalCanvas.width;
+  anexoPreviewCanvas.height = finalCanvas.height;
+  anexoPreviewCtx.drawImage(finalCanvas, 0, 0);
+
+  const marksCount = anexoDetectMarks(finalCtx, finalCanvas.width, finalCanvas.height);
+  document.getElementById('anexoMarcasCount').textContent = marksCount;
+
+  const quality = marksCount >= 20 ? 'Buena' : (marksCount >= 10 ? 'Regular' : 'Mala');
+  document.getElementById('anexoQualidad').textContent = quality;
+
+  document.getElementById('anexoSeccion2').style.display = 'none';
+  document.getElementById('anexoSeccion3').style.display = 'block';
+};
+
+function anexoCalculateOtsuThreshold(pixelData){
+  const hist = new Array(256).fill(0);
+  for(let i = 0; i < pixelData.length; i += 4){
+    hist[pixelData[i]]++;
+  }
+
+  const total = pixelData.length / 4;
+  let sum = 0;
+  for(let i = 0; i < 256; i++) sum += i * hist[i];
+
+  let sumB = 0, wB = 0, maxVar = 0, threshold = 0;
+
+  for(let t = 0; t < 256; t++){
+    wB += hist[t];
+    if(wB === 0) continue;
+
+    const wF = total - wB;
+    if(wF === 0) break;
+
+    sumB += t * hist[t];
+    const muB = sumB / wB;
+    const muF = (sum - sumB) / wF;
+    const variance = wB * wF * ((muB - muF) ** 2);
+
+    if(variance > maxVar){
+      maxVar = variance;
+      threshold = t;
+    }
+  }
+
+  return threshold;
+}
+
+function anexoApplyMedianFilter(ctx, width, height, radius = 1){
+  const imgData = ctx.getImageData(0, 0, width, height);
+  const data = imgData.data;
+  const newData = new Uint8ClampedArray(data);
+
+  for(let i = 0; i < height; i++){
+    for(let j = 0; j < width; j++){
+      const idx = (i * width + j) * 4;
+      const values = [];
+
+      for(let di = -radius; di <= radius; di++){
+        for(let dj = -radius; dj <= radius; dj++){
+          const ni = Math.max(0, Math.min(height - 1, i + di));
+          const nj = Math.max(0, Math.min(width - 1, j + dj));
+          const nidx = (ni * width + nj) * 4;
+          values.push(data[nidx]);
+        }
+      }
+
+      values.sort((a, b) => a - b);
+      const median = values[Math.floor(values.length / 2)];
+
+      newData[idx] = median;
+      newData[idx + 1] = median;
+      newData[idx + 2] = median;
+    }
+  }
+
+  imgData.data.set(newData);
+  ctx.putImageData(imgData, 0, 0);
+}
+
+function anexoDetectMarks(ctx, width, height){
+  const imgData = ctx.getImageData(0, 0, width, height);
+  const data = imgData.data;
+
+  const gridRows = 8;
+  const gridCols = 5;
+  const cellHeight = height / gridRows;
+  const cellWidth = width / gridCols;
+
+  let marksCount = 0;
+  const nonWhiteThreshold = 200;
+
+  for(let row = 0; row < gridRows; row++){
+    for(let col = 0; col < gridCols; col++){
+      const startX = Math.round(col * cellWidth);
+      const startY = Math.round(row * cellHeight);
+      const endX = Math.round((col + 1) * cellWidth);
+      const endY = Math.round((row + 1) * cellHeight);
+
+      let hasContent = false;
+
+      for(let y = startY; y < endY && !hasContent; y++){
+        for(let x = startX; x < endX && !hasContent; x++){
+          const idx = (y * width + x) * 4;
+          if(data[idx] < nonWhiteThreshold){
+            hasContent = true;
+          }
+        }
+      }
+
+      if(hasContent) marksCount++;
+    }
+  }
+
+  return Math.max(marksCount, 1);
+}
+
+document.getElementById('anexoBtnDescargar').onclick = () => {
+  if(!anexoProcessedImage) return;
+  const link = document.createElement('a');
+  link.href = anexoProcessedImage.toDataURL('image/png');
+  link.download = `anexo_${new Date().getTime()}.png`;
+  link.click();
+};
+
+document.getElementById('anexoBtnEnviar').onclick = () => {
+  if(!anexoProcessedImage) return;
+  alert('Lote guardado y listo para sincronizar con el backend.');
+  cerrarPantallaAnexo();
+};
+
+document.getElementById('anexoBtnLimpiar').onclick = () => {
+  resetAnexo();
+  document.getElementById('anexoSeccion2').style.display = 'none';
+  document.getElementById('anexoSeccion3').style.display = 'none';
+};
+
+/* ==========================================================
+   6. INICIO
    ========================================================== */
 mostrarPaso(0);
 renderLote();
